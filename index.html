@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000">
+<title>Unknown AI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700&display=swap');
+:root{--bg:#000;--panel:#0b0b0b;--panel2:#111;--text:#f4f4f4;--muted:#8b8b8b;--line:#242424;--hover:#181818;--pill:#171717}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:Vazirmatn,Inter,sans-serif}body{overflow:hidden}
+button,input,textarea{font:inherit}.hidden{display:none!important}
+.app{height:100dvh;display:flex;background:#000}.side{width:270px;flex:none;border-left:1px solid var(--line);background:#050505;padding:14px;display:flex;flex-direction:column;transition:transform .45s cubic-bezier(.22,1,.36,1);z-index:10}
+.brand{display:flex;align-items:center;gap:10px;padding:10px 8px 20px;font-weight:700}.brandmark{width:28px;height:28px;border:1px solid #444;border-radius:9px;display:grid;place-items:center;font-size:12px}
+.new{border:1px solid #303030;background:#0c0c0c;color:#eee;border-radius:13px;padding:11px 13px;cursor:pointer;text-align:right;transition:.2s}.new:hover{background:#171717;border-color:#444}
+.chats{flex:1;overflow:auto;margin-top:14px}.chatitem{padding:10px 11px;border-radius:10px;color:#a4a4a4;font-size:12px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chatitem:hover,.chatitem.active{background:#141414;color:#fff}
+.account{border-top:1px solid var(--line);padding-top:12px;margin-top:12px;display:flex;align-items:center;gap:9px}.userdot{width:31px;height:31px;border-radius:50%;background:#fff;color:#000;display:grid;place-items:center;font-size:11px}.email{font-size:10px;color:#777;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.logout{background:none;border:0;color:#777;cursor:pointer;font-size:11px}
+.main{min-width:0;flex:1;display:flex;flex-direction:column;position:relative}.top{height:58px;border-bottom:1px solid #171717;display:flex;align-items:center;justify-content:center;position:relative;background:rgba(0,0,0,.72);backdrop-filter:blur(18px);z-index:3}.topname{font-size:14px;font-weight:600}.menu{position:absolute;right:15px;background:none;border:0;color:#aaa;font-size:20px;display:none}
+.chat{flex:1;overflow:auto;scroll-behavior:smooth}.messages{width:min(860px,100%);margin:auto;padding:40px 22px 170px}.welcome{min-height:58vh;display:grid;place-items:center;text-align:center}.welcomein{transform:translateY(-18px);animation:appear .8s cubic-bezier(.22,1,.36,1)}.mark{width:54px;height:54px;border:1px solid #444;border-radius:18px;margin:0 auto 24px;display:grid;place-items:center;background:linear-gradient(145deg,#1a1a1a,#050505);box-shadow:0 0 70px #fff0}.welcome h1{font-size:29px;margin:0 0 9px;letter-spacing:-.8px}.welcome p{font-size:12px;color:#777;margin:0}
+.msg{display:flex;gap:13px;margin:27px 0;animation:appear .35s cubic-bezier(.22,1,.36,1)}.msg.user{flex-direction:row-reverse}.msg .avatar{width:28px;height:28px;min-width:28px;border-radius:9px;background:#eee;color:#111;display:grid;place-items:center;font-size:9px;margin-top:3px}.msg.ai .avatar{background:#151515;color:#eee;border:1px solid #303030}.bubble{font-size:14px;line-height:2;white-space:pre-wrap;word-break:break-word;max-width:78%}.user .bubble{background:#181818;border:1px solid #262626;border-radius:17px 17px 5px 17px;padding:10px 14px}
+.composerwrap{position:absolute;bottom:0;left:0;right:0;padding:22px 20px 17px;background:linear-gradient(transparent,#000 30%)}.composer{width:min(860px,100%);margin:auto;background:#111;border:1px solid #292929;border-radius:22px;padding:8px 9px 8px 13px;display:flex;align-items:flex-end;box-shadow:0 15px 60px #000}
+textarea{flex:1;min-height:42px;max-height:170px;background:transparent;border:0;outline:0;color:#eee;resize:none;padding:8px;font-size:13px;line-height:1.8}.send{width:41px;height:41px;border:0;border-radius:14px;background:#eee;color:#000;cursor:pointer;transition:.25s}.send:hover{transform:scale(1.04)}.send:disabled{opacity:.3}.hint{text-align:center;color:#555;font-size:9px;margin-top:8px}
+.auth{position:fixed;inset:0;background:#000;z-index:50;display:grid;place-items:center;padding:20px}.authcard{width:min(390px,100%);text-align:center}.authmark{width:58px;height:58px;border:1px solid #3b3b3b;border-radius:19px;margin:0 auto 24px;background:#0c0c0c;display:grid;place-items:center;box-shadow:0 0 80px #fff0}.auth h1{font-size:25px;margin:0 0 8px}.sub{font-size:12px;color:#777;margin-bottom:25px}.authinput{width:100%;height:49px;border:1px solid #303030;background:#0b0b0b;color:#fff;border-radius:14px;padding:0 15px;outline:none;text-align:left;direction:ltr;transition:.2s}.authinput:focus{border-color:#666;box-shadow:0 0 0 4px #fff0008}.authbutton{width:100%;height:49px;border:0;background:#eee;color:#000;border-radius:14px;margin-top:10px;cursor:pointer;font-weight:600}.back{background:none;border:0;color:#777;margin-top:13px;cursor:pointer;font-size:11px}.otp{letter-spacing:12px;text-align:center;font-size:20px;direction:ltr}.authmsg{height:20px;color:#888;font-size:10px;margin-top:12px}.autherr{color:#e77}.loader{position:fixed;inset:0;background:#000;z-index:100;display:grid;place-items:center}.spin{width:25px;height:25px;border:2px solid #222;border-top-color:#eee;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes appear{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:750px){.side{position:fixed;right:0;top:0;bottom:0;transform:translateX(100%);box-shadow:-30px 0 80px #000}.side.open{transform:none}.menu{display:block}.messages{padding:28px 15px 160px}.bubble{max-width:88%}}
+</style>
+</head>
+<body>
+<div id="loader" class="loader"><div class="spin"></div></div>
+
+<section id="auth" class="auth hidden">
+ <div class="authcard">
+  <div class="authmark">✦</div>
+  <h1>Unknown AI</h1>
+  <div id="sub" class="sub">ایمیل خود را وارد کنید تا کد ورود برایتان ارسال شود.</div>
+  <div id="emailStep">
+   <input id="email" class="authinput" type="email" autocomplete="email" placeholder="you@example.com">
+   <button id="sendOtp" class="authbutton">دریافت کد</button>
+  </div>
+  <div id="otpStep" class="hidden">
+   <input id="otp" class="authinput otp" inputmode="numeric" maxlength="6" placeholder="000000">
+   <button id="verifyOtp" class="authbutton">تأیید و ورود</button>
+   <button id="backOtp" class="back">تغییر ایمیل</button>
+  </div>
+  <div id="authmsg" class="authmsg"></div>
+ </div>
+</section>
+
+<div id="app" class="app hidden">
+ <aside id="side" class="side">
+  <div class="brand"><span class="brandmark">✦</span> Unknown AI</div>
+  <button id="newChat" class="new">＋ گفتگوی جدید</button>
+  <div id="chats" class="chats"></div>
+  <div class="account"><div id="userdot" class="userdot">U</div><div id="useremail" class="email"></div><button id="logout" class="logout">خروج</button></div>
+ </aside>
+ <main class="main">
+  <header class="top"><button id="menu" class="menu">☰</button><div class="topname">Unknown AI</div></header>
+  <section id="chat" class="chat"><div id="messages" class="messages"></div></section>
+  <div class="composerwrap">
+   <div class="composer"><textarea id="input" rows="1" placeholder="از Unknown AI چیزی بپرس..."></textarea><button id="send" class="send">↑</button></div>
+   <div class="hint">Unknown AI ممکن است اشتباه کند. اطلاعات مهم را بررسی کنید.</div>
+  </div>
+ </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./config.js"></script>
+<script>
+const {createClient}=supabase;
+const sb=createClient(APP_CONFIG.SUPABASE_URL,APP_CONFIG.SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const $=id=>document.getElementById(id);let user=null,currentChat=null,emailForOtp='';
+function msg(t,err=false){$('authmsg').textContent=t||'';$('authmsg').className='authmsg'+(err?' autherr':'')}
+function showAuth(){ $('loader').classList.add('hidden');$('app').classList.add('hidden');$('auth').classList.remove('hidden')}
+function showApp(){ $('loader').classList.add('hidden');$('auth').classList.add('hidden');$('app').classList.remove('hidden');$('useremail').textContent=user.email||'';$('userdot').textContent=(user.email||'U')[0].toUpperCase()}
+function welcome(){ $('messages').innerHTML='<div class="welcome"><div class="welcomein"><div class="mark">✦</div><h1>چه چیزی در ذهنت است؟</h1><p>گفتگو را با Unknown AI شروع کن.</p></div></div>'}
+function add(role,text){const el=document.createElement('div');el.className='msg '+role;el.innerHTML='<div class="avatar">'+(role==='user'?'شما':'✦')+'</div><div class="bubble"></div>';el.querySelector('.bubble').textContent=text;$('messages').appendChild(el);$('chat').scrollTop=$('chat').scrollHeight}
+async function loadChats(){const {data}=await sb.from('chats').select('id,title').order('created_at',{ascending:false});$('chats').innerHTML='';(data||[]).forEach(c=>{let x=document.createElement('div');x.className='chatitem';x.textContent=c.title||'گفتگوی جدید';x.onclick=()=>openChat(c.id);$('chats').appendChild(x)})}
+async function openChat(id){currentChat=id;welcome();const {data}=await sb.from('messages').select('role,content').eq('chat_id',id).order('created_at');(data||[]).forEach(m=>add(m.role,m.content));$('side').classList.remove('open')}
+async function createChat(title){const {data,error}=await sb.from('chats').insert({user_id:user.id,title:title.slice(0,50)}).select().single();if(error)throw error;currentChat=data.id;await loadChats();return data.id}
+async function send(){const input=$('input'),text=input.value.trim();if(!text)return;input.value='';resize();$('send').disabled=true;try{if(!currentChat)await createChat(text);await sb.from('messages').insert({chat_id:currentChat,user_id:user.id,role:'user',content:text});add('user',text);let typing=document.createElement('div');typing.className='msg ai';typing.id='typing';typing.innerHTML='<div class="avatar">✦</div><div class="bubble">در حال فکر کردن…</div>';$('messages').appendChild(typing);const {data:history}=await sb.from('messages').select('role,content').eq('chat_id',currentChat).order('created_at');const r=await fetch(APP_CONFIG.AI_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,history:history||[],user_id:user.id,chat_id:currentChat})});if(!r.ok)throw Error('AI endpoint error');const d=await r.json();const answer=d.response??d.output??d.text??d.message??JSON.stringify(d);$('typing')?.remove();add('ai',String(answer));await sb.from('messages').insert({chat_id:currentChat,user_id:user.id,role:'ai',content:String(answer)})}catch(e){$('typing')?.remove();add('ai','خطا در دریافت پاسخ. تنظیمات اتصال را بررسی کنید.');console.error(e)}finally{$('send').disabled=false;$('input').focus()}}
+function resize(){let x=$('input');x.style.height='auto';x.style.height=Math.min(x.scrollHeight,170)+'px'}
+$('sendOtp').onclick=async()=>{const email=$('email').value.trim();if(!email)return msg('ایمیل را وارد کنید.',true);$('sendOtp').disabled=true;msg('در حال ارسال کد…');const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:true}});$('sendOtp').disabled=false;if(error)return msg(error.message,true);emailForOtp=email;$('emailStep').classList.add('hidden');$('otpStep').classList.remove('hidden');$('sub').textContent='کد ۶ رقمی ارسال‌شده به ایمیل را وارد کنید.';msg('کد ارسال شد. پوشه Spam را هم بررسی کنید.')}
+$('verifyOtp').onclick=async()=>{const token=$('otp').value.trim();if(!/^\d{6}$/.test(token))return msg('کد باید ۶ رقمی باشد.',true);$('verifyOtp').disabled=true;const {data,error}=await sb.auth.verifyOtp({email:emailForOtp,token,type:'email'});$('verifyOtp').disabled=false;if(error)return msg(error.message,true);user=data.user;await init()}
+$('backOtp').onclick=()=>{$('otpStep').classList.add('hidden');$('emailStep').classList.remove('hidden');$('sub').textContent='ایمیل خود را وارد کنید تا کد ورود برایتان ارسال شود.';msg('')}
+$('newChat').onclick=async()=>{currentChat=null;welcome();$('side').classList.remove('open')}
+$('logout').onclick=async()=>{await sb.auth.signOut();location.reload()}
+$('menu').onclick=()=>$('side').classList.toggle('open');$('send').onclick=send;$('input').addEventListener('input',resize);$('input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}})
+async function init(){const {data}=await sb.auth.getSession();user=data.session?.user||user;if(!user)return showAuth();showApp();welcome();await loadChats()}
+sb.auth.onAuthStateChange((_e,s)=>{if(s){user=s.user;if(document.getElementById('auth')&&!$('auth').classList.contains('hidden'))init()}});init();
+</script>
+</body>
+</html>
