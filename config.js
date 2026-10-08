@@ -6,5 +6,5 @@ const APP_CONFIG = {
   SUPABASE_PUBLISHABLE_KEY: "sb_publishable_vU7j_opt2336kIS_Jrpukw_hLNGB1bG",
 
   // بعداً URL Webhook / API خودت را اینجا می‌گذاری.
-  AI_ENDPOINT: "https://YOUR-N8N-DOMAIN/webhook/unknown-ai"
+  AI_ENDPOINT: "https://xcino.app.n8n.cloud/webhook/unknown-ai"
 };
