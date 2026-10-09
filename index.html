@@ -502,6 +502,80 @@ textarea:focus{font-size:16px;line-height:24px;padding:9px 8px;outline:0}
   .av-modal.open .av-sheet{transition:transform .6s var(--ease),opacity .3s ease}
 }
 /* ===== END APPLE MOTION v3 ===== */
+
+/* =====================================================================
+   CHAT EXTRAS v4 — لایه‌ی مستقل: تصویر پس‌زمینه، جایگاه حباب‌ها، حذف تاریخچه،
+   متن چرخشی. فقط موارد جدید را استایل می‌دهد و بقیه‌ی سایت را تغییر نمی‌دهد.
+   منطق این بخش در extras.js است. برای بازگشت کافی است این بلاک تا
+   «END CHAT EXTRAS v4» و فایل extras.js حذف شود.
+   ===================================================================== */
+/* ---- ۱. تصویر پس‌زمینه‌ی صفحه‌ی اصلی (فقط پشت محتوا) ---- */
+:root{--homebg-op:.55;--homebg-ov:.35}
+:root[data-theme="light"]{--homebg-op:.18;--homebg-ov:.3}
+.main{isolation:isolate}
+.homebg{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden;contain:paint}
+.homebg::before{content:"";position:absolute;inset:-14px;background:url("bg.jpg") center/cover no-repeat;opacity:var(--homebg-op);filter:blur(3px);transform:translateZ(0)}
+.homebg::after{content:"";position:absolute;inset:0;background:var(--bg);opacity:var(--homebg-ov)}
+
+/* ---- ۵. جایگاه پیام‌ها: کاربر راست، پاسخ هوش مصنوعی چپ (فقط alignment) ---- */
+.msg.user{flex-direction:row}
+.msg.ai{flex-direction:row-reverse}
+.msg.user .bubble{border-radius:18px 18px 6px 18px;transform-origin:bottom right}
+.msg.ai .bubble{border-radius:18px 18px 18px 6px;transform-origin:bottom left}
+
+/* ---- ۴. متن چرخشی زیر لوگو (ارتفاع = بلندترین متن، بدون پرش) ---- */
+.welcome h1.rt{display:grid}
+.rt-item{grid-area:1/1;opacity:0;transform:translateY(8px);transition:opacity .45s ease,transform .45s ease}
+.rt-item.on{opacity:1;transform:none;transition:opacity .6s ease .45s,transform .7s var(--spring) .45s}
+
+/* ---- ۲. دکمه‌ی پاک کردن همه ---- */
+.clearall{margin-top:8px;height:32px;flex:none;border:0;border-radius:10px;background:transparent;color:var(--muted2);font-size:12px;cursor:pointer;transition:color var(--dur-1) ease,background-color var(--dur-1) ease,transform .5s var(--spring)}
+.clearall:hover{color:var(--err);background:var(--item-hover)}
+.clearall:active{transform:scale(.98);transition-duration:.15s}
+.clearall:focus-visible{outline:2px solid var(--composer-focus);outline-offset:2px}
+
+/* ---- ۲. سه‌نقطه‌ی کنار هر گفتگو ---- */
+.chatitem.hasmore{position:relative}
+.chatmore{position:absolute;top:50%;inset-inline-end:4px;width:28px;height:28px;margin-top:-14px;padding:0;border:0;border-radius:9px;background:var(--item-hover);color:var(--item-text);display:grid;place-items:center;cursor:pointer;opacity:0;pointer-events:none;transform:scale(.85);-webkit-tap-highlight-color:transparent;transition:opacity .25s ease,transform .5s var(--spring),color .2s ease}
+.chatmore svg{width:18px;height:18px;fill:currentColor;pointer-events:none}
+.chatitem:hover .chatmore,.chatitem:focus-within .chatmore,.chatmore.open{opacity:1;pointer-events:auto;transform:none}
+.chatmore:hover,.chatmore.open{color:var(--text)}
+.chatmore:active{transform:scale(.9);transition-duration:.15s}
+.chatmore:focus-visible{outline:2px solid var(--composer-focus);outline-offset:1px}
+@media (hover:none),(pointer:coarse),(max-width:750px){
+ .chatitem.hasmore{padding-inline-end:38px}
+ .chatmore{opacity:1;pointer-events:auto;transform:none;background:transparent}
+}
+
+/* ---- ۲. منوی کوچک حذف ---- */
+.cm-menu{position:fixed;z-index:60;min-width:172px;padding:5px;border-radius:14px;background:var(--modal-bg);border:1px solid var(--card-line);box-shadow:var(--shadow-pop);opacity:0;visibility:hidden;transform:translateY(-6px) scale(.94);transition:opacity .15s ease,transform .2s var(--ease-io),visibility 0s linear .2s}
+.cm-menu.open{opacity:1;visibility:visible;transform:none;transition:opacity .25s ease,transform .5s var(--spring),visibility 0s}
+.cm-item{display:flex;align-items:center;gap:9px;width:100%;height:38px;padding:0 11px;border:0;border-radius:10px;background:transparent;color:var(--err);font-size:13.5px;cursor:pointer;text-align:start;transition:background-color .15s ease,transform .4s var(--spring)}
+.cm-item:hover,.cm-item:focus-visible{background:var(--item-hover);outline:0}
+.cm-item:active{transform:scale(.98);transition-duration:.15s}
+.cm-item svg{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---- ۲. پنجره‌ی تأیید حذف ---- */
+.cd-modal{position:fixed;inset:0;z-index:85;display:flex;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));background:var(--backdrop);-webkit-backdrop-filter:blur(0);backdrop-filter:blur(0);opacity:0;visibility:hidden;transition:opacity .28s ease,-webkit-backdrop-filter .28s ease,backdrop-filter .28s ease,visibility 0s linear .28s}
+.cd-modal.open{opacity:1;visibility:visible;-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);transition:opacity .4s ease,-webkit-backdrop-filter .4s ease,backdrop-filter .4s ease,visibility 0s}
+.cd-panel{width:min(340px,100%);text-align:center;padding:26px 22px 20px;border-radius:26px;background:var(--modal-bg);border:1px solid var(--card-line);box-shadow:var(--shadow-pop);transform:translateY(22px) scale(.95);opacity:0;transition:transform .3s var(--ease-io),opacity .22s ease}
+.cd-modal.open .cd-panel{transform:none;opacity:1;transition:transform .6s var(--spring),opacity .35s ease}
+.cd-icon{width:52px;height:52px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;background:var(--panel2);color:var(--err);box-shadow:0 0 0 1px var(--line)}
+.cd-icon svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.cd-title{margin:0;font-size:16.5px;font-weight:600;line-height:1.9;text-wrap:balance}
+.cd-sub{margin:6px 0 0;font-size:12px;line-height:1.8;color:var(--muted2);overflow-wrap:anywhere}
+.cd-sub:empty{display:none}
+.cd-actions{display:flex;gap:10px;margin-top:22px}
+.cd-btn{flex:1;height:46px;border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .5s var(--spring),opacity .25s ease,background-color .2s ease,filter .25s ease}
+.cd-btn:active:not(:disabled){transform:scale(.97);transition-duration:.15s}
+.cd-btn:disabled{opacity:.5;cursor:default}
+.cd-btn:focus-visible{outline:2px solid var(--composer-focus);outline-offset:2px}
+.cd-keep{border:0;background:var(--btn-bg);color:var(--btn-text)}
+.cd-keep:hover:not(:disabled){filter:brightness(1.08)}
+.cd-del{border:1px solid var(--input-line);background:transparent;color:var(--err)}
+.cd-del:hover:not(:disabled){background:var(--item-hover)}
+.cd-err{min-height:18px;margin-top:12px;font-size:11.5px;line-height:1.7;color:var(--err)}
+/* ===== END CHAT EXTRAS v4 ===== */
 </style>
 </head>
 <body>
@@ -558,11 +632,13 @@ textarea:focus{font-size:16px;line-height:24px;padding:9px 8px;outline:0}
   <div class="searchbox" role="search"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-3.8-3.8"/></svg><input id="chatSearch" type="search" placeholder="جست‌وجو در گفتگوها" aria-label="جست‌وجو در گفتگوها" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"><button id="chatSearchClear" class="iconbtn hidden" type="button" aria-label="پاک کردن عبارت جست‌وجو"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div id="searchResults" class="searchres hidden"></div>
   <div id="chats" class="chats"></div>
+  <button id="clearAllChats" class="clearall hidden" type="button" aria-haspopup="dialog">پاک کردن همه تاریخچه</button>
   <div class="support-card"><div class="support-title">ارتباط با پشتیبانی</div><div class="support-sub">سؤال یا مشکلی دارید؟ برای ما پیام بگذارید.</div><button id="supportOpen" class="support-btn" type="button" aria-haspopup="dialog">شروع گفت‌وگو</button></div>
   <div class="account"><div id="userdot" class="userdot">U</div><div id="useremail" class="email"></div><button id="logout" class="logout">خروج</button></div>
  </aside>
  <div id="sideBackdrop" class="side-backdrop" aria-hidden="true"></div>
  <main class="main">
+  <div class="homebg" aria-hidden="true"></div>
   <header class="top"><button id="menu" class="menu iconbtn" type="button" aria-controls="side" aria-expanded="false" aria-label="باز کردن تاریخچه"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="16" rx="3.5"/><path d="M15 4v16"/></svg></button><div class="topname"><img class="logo logo-top" src="data:image/png;base64,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" alt="لوگوی سایت"></div></header>
   <section id="chat" class="chat"><div id="messages" class="messages"></div></section>
   <div class="composerwrap">
@@ -933,5 +1009,6 @@ sb.auth.onAuthStateChange((_e,s)=>{if(s){user=s.user;if(document.getElementById(
 })();
 </script>
 <script src="./ui.js"></script>
+<script src="./extras.js"></script>
 </body>
 </html>
