@@ -58,7 +58,14 @@
       list[cur].classList.add('on');list[cur].removeAttribute('aria-hidden');
     },ROTATE_MS);
   }
+  /* پس‌زمینه فقط روی صفحه‌ی خوش‌آمد دیده می‌شود؛ با شروع چت (یا باز کردن یک گفتگو) محو می‌شود */
+  var mainEl=document.querySelector('.main');
+  function setChatting(){
+    if(!mainEl)return;
+    mainEl.classList.toggle('chatting',!msgsEl.querySelector('.welcome')||!!curChat());
+  }
   function syncWelcome(){
+    setChatting();
     var h1=msgsEl.querySelector('.welcome h1');
     if(!h1){stopRotate();return}
     if(h1.getAttribute('data-rt'))return;
