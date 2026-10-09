@@ -516,6 +516,8 @@ textarea:focus{font-size:16px;line-height:24px;padding:9px 8px;outline:0}
 .homebg{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden;contain:paint;transition:opacity 1.2s var(--ease-io),visibility 0s}
 /* وقتی چت شروع شد، پس‌زمینه آرام آرام محو می‌شود و صفحه فقط روی چت متمرکز می‌ماند */
 .main.chatting .homebg{opacity:0;visibility:hidden;transition:opacity 1.6s var(--ease-io),visibility 0s linear 1.6s}
+/* پشتیبان فقط-CSS: حتی اگر extras.js قدیمی/کش‌شده باشد، با نبودن صفحه‌ی خوش‌آمد پس‌زمینه محو می‌شود */
+.main:not(:has(.welcome)) .homebg{opacity:0;visibility:hidden;transition:opacity 1.6s var(--ease-io),visibility 0s linear 1.6s}
 .homebg::before{content:"";position:absolute;inset:-14px;background:url("bg.jpg") center/cover no-repeat;opacity:var(--homebg-op);filter:blur(3px);transform:translateZ(0)}
 .homebg::after{content:"";position:absolute;inset:0;background:var(--bg);opacity:var(--homebg-ov)}
 
@@ -1020,6 +1022,6 @@ sb.auth.onAuthStateChange((_e,s)=>{if(s){user=s.user;if(document.getElementById(
 })();
 </script>
 <script src="./ui.js"></script>
-<script src="./extras.js"></script>
+<script src="./extras.js?v=5"></script>
 </body>
 </html>
