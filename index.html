@@ -11,7 +11,7 @@
 /* حالت بروزرسانی: برای نمایش صفحه‌ی «در حال بروزرسانی» مقدار را true کن، بعد از اتمام کار false.
    خودت با افزودن ?preview به آدرس سایت می‌توانی سایت واقعی را ببینی. */
 (function(){
-  var MAINTENANCE = true;
+  var MAINTENANCE = false;
   var preview = false;
   try { preview = /[?&]preview\b/.test(location.search) || sessionStorage.getItem("maint_preview") === "1"; if (/[?&]preview\b/.test(location.search)) sessionStorage.setItem("maint_preview","1"); } catch(e) {}
   if (MAINTENANCE && !preview) { location.replace("./maintenance.html"); }
