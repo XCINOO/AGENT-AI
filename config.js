@@ -1,4 +1,3 @@
-
 // Unknown AI configuration
 // فقط مقادیر عمومی پروژه را اینجا قرار بده.
 // هرگز Secret / service_role / SMTP password را اینجا نگذار.
@@ -9,3 +8,4 @@ const APP_CONFIG = {
   AI_ENDPOINT: "https://xcinoo2.app.n8n.cloud/webhook/unknown-ai",
   SUPPORT_ENDPOINT: "https://xcinoo2.app.n8n.cloud/webhook/unknown-ai-support"
 };
+
