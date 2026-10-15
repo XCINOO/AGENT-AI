@@ -5,5 +5,6 @@ const APP_CONFIG = {
   SUPABASE_URL: "https://xjdfjepgduxfvwxltiba.supabase.co",
   SUPABASE_PUBLISHABLE_KEY: "sb_publishable_vU7j_opt2336kIS_Jrpukw_hLNGB1bG",
 
-  AI_ENDPOINT: "https://xcinoo3.app.n8n.cloud/webhook/unknown-ai",
-  SUPPORT_ENDPOINT: "https://xcinoo3.app.n8n.cloud/webhook/unknown-ai-support",
+  AI_ENDPOINT: "https://xcinoo2.app.n8n.cloud/webhook/unknown-ai",
+  SUPPORT_ENDPOINT: "https://xcinoo2.app.n8n.cloud/webhook/unknown-ai-support"
+};
