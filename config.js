@@ -7,9 +7,3 @@ const APP_CONFIG = {
 
   AI_ENDPOINT: "https://xcinoo3.app.n8n.cloud/webhook/unknown-ai",
   SUPPORT_ENDPOINT: "https://xcinoo3.app.n8n.cloud/webhook/unknown-ai-support",
-
-  // endpointهای دیگر workflow. اگر فرانت از این‌ها استفاده می‌کند، با همین نام‌ها صدا بزنید.
-  FEEDBACK_ENDPOINT: "https://xcinoo3.app.n8n.cloud/webhook/unknown-ai-feedback",
-  USAGE_ENDPOINT: "https://xcinoo3.app.n8n.cloud/webhook/unknown-ai-usage",
-  ACTIVITY_ENDPOINT: "https://xcinoo3.app.n8n.cloud/webhook/unknown-ai-activity"
-};
