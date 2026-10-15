@@ -1,5 +1,5 @@
 (function () {
-  var ENDPOINT = 'https://xcino.app.n8n.cloud/webhook/unknown-ai-activity';
+  var ENDPOINT = String((typeof APP_CONFIG !== 'undefined' && APP_CONFIG.ACTIVITY_ENDPOINT) || 'https://xcinoo3.app.n8n.cloud/webhook/unknown-ai-activity').trim();
   var waitingLogin = false;
   function getUser() { try { return (typeof user !== 'undefined' && user) ? user : null; } catch (e) { return null; } }
   function track(event) {

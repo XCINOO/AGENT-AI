@@ -4,7 +4,7 @@
    مسدودکردن واقعی بعد از پرداخت سهمیه با خود ورک‌فلوی چت است؛ اینجا فقط نمایش و راهنمایی کاربر است. */
 (function () {
   'use strict';
-  var DEFAULT_ENDPOINT = 'https://xcino.app.n8n.cloud/webhook/unknown-ai-usage';
+  var DEFAULT_ENDPOINT = 'https://xcinoo3.app.n8n.cloud/webhook/unknown-ai-usage';
   var SUPPORT_TEXT = 'سلام، سهمیه‌ی امروزم تمام شده و می‌خواهم حسابم را شارژ کنم.';
   var COLOR = { ok: 'var(--ok)', warn: 'var(--warn-text)', hot: 'var(--err)', full: 'var(--err)' };
 
