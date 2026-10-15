@@ -1,610 +1,155 @@
-/* مصرف روزانه‌ی توکن و پیام — نمایش در سایدبار/نوار بالا، پنجره‌ی جزئیات، و هدایت به پشتیبانی وقتی سهمیه تمام شد.
-   فقط لایه‌ی رابط کاربری: عدد مصرف از ورک‌فلوی n8n («Unknown AI - Token Usage») خوانده می‌شود.
-   آدرس را می‌شود در config.js با APP_CONFIG.USAGE_ENDPOINT عوض کرد (مثل SUPPORT_ENDPOINT).
-   مسدودکردن واقعی بعد از پرداخت سهمیه با خود ورک‌فلوی چت است؛ اینجا فقط نمایش و راهنمایی کاربر است. */
-(function () {
+/* =====================================================================
+   انتخاب پروفایل — اسکریپت مستقل (فقط رابط کاربری)
+   - به منطق چت/احراز هویت/دیتابیس دست نمی‌زند و هیچ درخواست شبکه‌ای نمی‌فرستد.
+   - انتخاب هر کاربر روی همین دستگاه (localStorage) و بر اساس ایمیلش ذخیره می‌شود.
+   - به‌دلیل CSP سایت، این کد در فایل جدا آمده تا hash اسکریپت‌های inline تغییر نکند.
+   ===================================================================== */
+(function(){
   'use strict';
+  var g=function(i){return document.getElementById(i)};
+  var root=document.documentElement;
+  var appEl=g('app'),dot=g('userdot');
+  if(!appEl||!dot)return;
 
-  var DEFAULT_ENDPOINT = 'https://xcinoo3.app.n8n.cloud/webhook/unknown-ai-usage';
-  var SUPPORT_TEXT = 'سلام، سهمیه‌ی امروزم تمام شده و می‌خواهم حسابم را شارژ کنم.';
-  var COLOR = {
-    ok: 'var(--ok)',
-    warn: 'var(--warn-text)',
-    hot: 'var(--err)',
-    full: 'var(--err)'
-  };
+  var AVATARS=[
+    {id:'a1',src:'avatars/a1.jpg',label:'جنگجوی آبی'},
+    {id:'a2',src:'avatars/a2.jpg',label:'عینک نارنجی'},
+    {id:'a3',src:'avatars/a3.jpg',label:'همستر هکر'},
+    {id:'a4',src:'avatars/a4.jpg',label:'کابوی'},
+    {id:'a5',src:'avatars/a5.jpg',label:'فضایی'},
+    {id:'a6',src:'avatars/a6.jpg',label:'نقاب‌دار'}
+  ];
+  var CHECK='<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+  var PERSON='<svg class="ph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 20c.7-3.7 3.5-5.8 7.2-5.8s6.5 2.1 7.2 5.8"/></svg>';
+  var CLOSE='<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18"/></svg>';
 
-  var g = function (i) {
-    return document.getElementById(i);
-  };
+  var memory={};            /* اگر localStorage در دسترس نبود، فقط تا بستن صفحه */
+  var picker=null,grid=null,doneBtn=null,preview=null,items=[],imgs=[];
+  var selected=null,required=false,lastFocus=null,shown=false;
 
-  var card = g('tokenCard'),
-      cCount = g('tokenCount'),
-      cMax = g('tokenMax'),
-      cPlus = g('tokenPlus'),
-      cBar = g('tokenBar'),
-      cNote = g('tokenNote'),
-      icon = g('usageIcon'),
-      dot = g('usageDot'),
-      banner = g('tokenBanner'),
-      bBtn = g('tokenSupportBtn'),
-      msgs = g('messages'),
-      appEl = g('app');
+  function find(id){for(var i=0;i<AVATARS.length;i++)if(AVATARS[i].id===id)return AVATARS[i];return null}
+  function key(){var e=(g('useremail')&&g('useremail').textContent||'').trim().toLowerCase();return 'avatar:'+(e||'guest')}
+  function load(){var k=key();try{var v=localStorage.getItem(k);if(v)return v}catch(e){}return memory[k]||null}
+  function save(id){var k=key();memory[k]=id;try{localStorage.setItem(k,id)}catch(e){}}
+  function abs(a){try{return new URL(a.src,document.baseURI).href}catch(e){return a.src}}
 
-  if (!card || !cCount || !cBar || !msgs) return;
-
-  var data = null,
-      shown = 0,
-      busy = false,
-      last = 0,
-      tmr = null,
-      plusT = null,
-      raf = 0;
-
-  var reduce = false;
-
-  try {
-    reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  } catch (e) {}
-
-  function curUser() {
-    try {
-      return user;
-    } catch (e) {
-      return null;
-    }
+  /* ---------- نمایش پروفایل انتخاب‌شده در سایت ---------- */
+  function apply(id){
+    var a=find(id);
+    if(!a){root.classList.remove('has-avatar');root.style.removeProperty('--me-avatar');return}
+    root.style.setProperty('--me-avatar','url("'+abs(a)+'")');
+    root.classList.add('has-avatar');
   }
-
-  function fa(n) {
-    try {
-      return Number(n || 0).toLocaleString('fa-IR');
-    } catch (e) {
-      return String(n || 0);
-    }
-  }
-
-  function endpoint() {
-    var u = '';
-
-    try {
-      u = String(
-        (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.USAGE_ENDPOINT) || ''
-      ).trim();
-    } catch (e) {}
-
-    return /^https:\/\//i.test(u) ? u : DEFAULT_ENDPOINT;
-  }
-
-  function pct(a, b) {
-    return b > 0 ? Math.min(100, a / b * 100) : 0;
-  }
-
-  function level(p) {
-    return p >= 100 ? 'full' :
-           p >= 90 ? 'hot' :
-           p >= 70 ? 'warn' : 'ok';
-  }
-
-  function exhausted() {
-    return !!data &&
-      (data.tok >= data.tokMax || data.msg >= data.msgMax);
-  }
-
-  /* ---------------- نمایش ---------------- */
-
-  function setCount(v) {
-    cCount.textContent = fa(v);
-
-    var m = g('usTok');
-
-    if (m) {
-      m.textContent = fa(v) + ' / ' + fa(data ? data.tokMax : 0);
-    }
-  }
-
-  function animateTo(target, showPlus) {
-    cancelAnimationFrame(raf);
-
-    var start = shown,
-        diff = target - start;
-
-    if (showPlus && diff > 0) {
-      cPlus.textContent = '+' + fa(diff);
-      cPlus.classList.add('on');
-
-      clearTimeout(plusT);
-
-      plusT = setTimeout(function () {
-        cPlus.classList.remove('on');
-      }, 1800);
-    }
-
-    if (reduce || diff === 0) {
-      shown = target;
-      setCount(target);
-      return;
-    }
-
-    var t0 = null;
-
-    (function step(ts) {
-      if (t0 === null) t0 = ts;
-
-      var k = Math.min(1, (ts - t0) / 700);
-
-      setCount(Math.round(start + diff * k));
-
-      if (k < 1) {
-        raf = requestAnimationFrame(step);
-      } else {
-        shown = target;
-      }
-    })(performance.now ? performance.now() : 0);
-  }
-
-  function paint(animate) {
-    if (!data) {
-      cCount.textContent = '—';
-      cMax.textContent = '';
-      cBar.style.width = '0';
-      cNote.textContent = 'سهمیه‌ی روزانه';
-      return;
-    }
-
-    var pt = pct(data.tok, data.tokMax),
-        pm = pct(data.msg, data.msgMax),
-        worst = Math.max(pt, pm),
-        lv = level(worst);
-
-    card.classList.remove('warn', 'hot', 'full');
-
-    if (lv !== 'ok') {
-      card.classList.add(lv === 'hot' ? 'full' : lv);
-    }
-
-    cMax.textContent = '/ ' + fa(data.tokMax) + ' توکن';
-    cBar.style.width = pt + '%';
-    cBar.style.background = COLOR[level(pt)];
-
-    var tl = Math.max(0, data.tokMax - data.tok),
-        ml = Math.max(0, data.msgMax - data.msg);
-
-    cNote.textContent = exhausted()
-      ? 'سهمیه‌ی امروز تمام شد'
-      : fa(tl) + ' توکن · ' + fa(ml) + ' پیام مانده';
-
-    if (dot) {
-      dot.className = 'usage-dot' +
-        (lv === 'ok' ? '' : lv === 'warn' ? ' warn' : ' full');
-    }
-
-    if (icon) {
-      icon.title = 'مصرف امروز: ' +
-        fa(data.tok) + ' از ' + fa(data.tokMax) + ' توکن';
-    }
-
-    banner.classList.toggle('hidden', !exhausted());
-
-    animateTo(data.tok, animate);
-
-    if (mdl && mdl.classList.contains('open')) {
-      paintModal();
-    }
-  }
-
-  function sync() {
-    var ready = !!curUser() &&
-      !(appEl && appEl.classList.contains('hidden'));
-
-    if (icon) {
-      icon.classList.toggle('hidden', !ready);
-    }
-  }
-
-  /* ---------------- دریافت اطلاعات مصرف ---------------- */
-
-  async function refresh() {
-    var u = curUser();
-
-    sync();
-
-    if (!u || busy) return;
-
-    busy = true;
-
-    var ctl = null,
-        timer = null;
-
-    try {
-      var at = null;
-
-      try {
-        at = (await sb.auth.getSession()).data.session.access_token;
-      } catch (e) {}
-
-      ctl = ('AbortController' in window)
-        ? new AbortController()
-        : null;
-
-      timer = setTimeout(function () {
-        if (ctl) ctl.abort();
-      }, 10000);
-
-      var r = await fetch(endpoint(), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        signal: ctl ? ctl.signal : undefined,
-        body: JSON.stringify({
-          user_id: u.id,
-          access_token: at
-        })
-      });
-
-      if (!r.ok) {
-        throw new Error('http ' + r.status);
-      }
-
-      var d = await r.json();
-      var had = !!data;
-
-      data = {
-        tok: +d.tokens_used || 0,
-        tokMax: +d.token_limit || 20000,
-        msg: +d.messages_used || 0,
-        msgMax: +d.message_limit || 50
-      };
-
-      paint(had);
-
-    } catch (e) {
-      console.warn('usage', e);
-
-    } finally {
-      clearTimeout(timer);
-      busy = false;
-      last = Date.now();
-    }
-  }
-
-  /* ---------------- پشتیبانی ---------------- */
-
-  function toSupport() {
-    closeModal(true);
-
-    var b = g('supportOpen') || g('supportIcon');
-
-    if (b) b.click();
-
-    setTimeout(function () {
-      var si = g('supportInput');
-
-      if (si && !si.disabled && !si.value.trim()) {
-        si.value = SUPPORT_TEXT;
-
-        si.dispatchEvent(
-          new Event('input', { bubbles: true })
-        );
-      }
-    }, 250);
-  }
-
-  if (bBtn) {
-    bBtn.addEventListener('click', toSupport);
-  }
-
-  /* وقتی سهمیه تمام شده، ارسال پیام متوقف و پشتیبانی باز می‌شود. */
-
-  function stop(e) {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-
-    refresh();
-    toSupport();
-  }
-
-  document.addEventListener('click', function (e) {
-    if (
-      exhausted() &&
-      e.target &&
-      e.target.closest &&
-      e.target.closest('#send')
-    ) {
-      stop(e);
-    }
-  }, true);
-
-  document.addEventListener('keydown', function (e) {
-    if (
-      exhausted() &&
-      e.target &&
-      e.target.id === 'input' &&
-      e.key === 'Enter' &&
-      !e.shiftKey &&
-      !e.isComposing
-    ) {
-      stop(e);
-    }
-  }, true);
-
-  /* ---------------- پنجره‌ی جزئیات مصرف ---------------- */
-
-  var mdl = null,
-      mSub,
-      mTokBar,
-      mMsg,
-      mMsgBar,
-      mLeft,
-      mPrim,
-      mSec,
-      mLast = null;
-
-  var GAUGE =
-    '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
-      '<path d="M4.5 16.5a7.5 7.5 0 1 1 15 0"/>' +
-      '<path d="M12 16.5l3.2-4.2"/>' +
-    '</svg>';
-
-  function buildModal() {
-    mdl = document.createElement('div');
-
-    mdl.className = 'cd-modal';
-    mdl.setAttribute('aria-hidden', 'true');
-
-    mdl.innerHTML =
-      '<div class="cd-panel" role="dialog" aria-modal="true" ' +
-      'aria-labelledby="usTitle" aria-describedby="usSub">' +
-
-        '<div class="cd-icon us-ic" aria-hidden="true">' +
-          GAUGE +
-        '</div>' +
-
-        '<h2 class="cd-title" id="usTitle">مصرف امروز</h2>' +
-        '<p class="cd-sub" id="usSub"></p>' +
-
-        '<div class="us-row">' +
-          '<span>توکن</span>' +
-          '<span id="usTok">—</span>' +
-        '</div>' +
-
-        '<span class="us-bar"><i id="usTokBar"></i></span>' +
-
-        '<div class="us-row">' +
-          '<span>پیام</span>' +
-          '<span id="usMsg">—</span>' +
-        '</div>' +
-
-        '<span class="us-bar"><i id="usMsgBar"></i></span>' +
-
-        '<div class="us-left" id="usLeft"></div>' +
-
-        '<div class="us-note">' +
-          'تعداد توکن تقریبی است و از روی طول متن حساب می‌شود.' +
-        '</div>' +
-
-        '<div class="cd-actions">' +
-          '<button type="button" class="cd-btn cd-keep" id="usPrim"></button>' +
-          '<button type="button" class="cd-btn us-sec" id="usSec">بستن</button>' +
-        '</div>' +
-
+  function popDot(){dot.classList.remove('av-pop');void dot.offsetWidth;dot.classList.add('av-pop')}
+
+  /* ---------- ساخت پنجره‌ی انتخاب ---------- */
+  function build(){
+    picker=document.createElement('div');
+    picker.id='avatarModal';picker.className='av-modal';picker.setAttribute('aria-hidden','true');
+    var cells='',prev='';
+    AVATARS.forEach(function(a){
+      cells+='<button type="button" class="av-item" role="radio" aria-checked="false" data-id="'+a.id+'" aria-label="'+a.label+'"><img src="'+a.src+'" alt="" draggable="false"><span class="chk">'+CHECK+'</span></button>';
+      prev+='<img src="'+a.src+'" alt="" data-id="'+a.id+'" draggable="false">';
+    });
+    picker.innerHTML=
+      '<div class="av-sheet" role="dialog" aria-modal="true" aria-labelledby="avTitle">'+
+        '<button type="button" class="iconbtn av-close" aria-label="بستن">'+CLOSE+'</button>'+
+        '<div class="av-preview" aria-hidden="true">'+PERSON+prev+'</div>'+
+        '<h2 id="avTitle">پروفایلت را انتخاب کن</h2>'+
+        '<p class="av-sub">یکی از این تصویرها نمایهٔ تو خواهد بود.<br>هر وقت خواستی از پایین سایدبار می‌توانی عوضش کنی.</p>'+
+        '<div class="av-grid" role="radiogroup" aria-labelledby="avTitle">'+cells+'</div>'+
+        '<button type="button" class="authbutton av-done" disabled>ادامه</button>'+
       '</div>';
+    document.body.appendChild(picker);
+    grid=picker.querySelector('.av-grid');doneBtn=picker.querySelector('.av-done');preview=picker.querySelector('.av-preview');
+    items=[].slice.call(picker.querySelectorAll('.av-item'));imgs=[].slice.call(preview.querySelectorAll('img'));
 
-    document.body.appendChild(mdl);
-
-    mSub = g('usSub');
-    mTokBar = g('usTokBar');
-    mMsg = g('usMsg');
-    mMsgBar = g('usMsgBar');
-    mLeft = g('usLeft');
-    mPrim = g('usPrim');
-    mSec = g('usSec');
-
-    mPrim.addEventListener('click', function () {
-      if (exhausted()) {
-        toSupport();
-      } else {
-        closeModal(true);
-      }
+    grid.addEventListener('click',function(e){var b=e.target.closest('.av-item');if(b)select(b.getAttribute('data-id'),false)});
+    grid.addEventListener('keydown',function(e){
+      var k=e.key,i=items.indexOf(document.activeElement);if(i<0)return;
+      var rtl=getComputedStyle(root).direction==='rtl',n=items.length,to=-1;
+      if(k==='ArrowRight')to=rtl?i-1:i+1;else if(k==='ArrowLeft')to=rtl?i+1:i-1;
+      else if(k==='ArrowDown')to=i+3;else if(k==='ArrowUp')to=i-3;else return;
+      e.preventDefault();
+      if(to<0||to>=n)return;
+      items[to].focus();select(items[to].getAttribute('data-id'),false);
     });
-
-    mSec.addEventListener('click', function () {
-      closeModal(true);
-    });
-
-    mdl.addEventListener('mousedown', function (e) {
-      if (e.target === mdl) {
-        closeModal(true);
-      }
-    });
-
-    mdl.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        e.preventDefault();
-        closeModal(true);
-        return;
-      }
-
-      if (e.key === 'Tab') {
-        var f = [].filter.call(
-          mdl.querySelectorAll('button:not([disabled])'),
-          function (n) {
-            return n.offsetParent !== null;
-          }
-        );
-
-        if (!f.length) {
-          e.preventDefault();
-          return;
-        }
-
-        var a = f[0],
-            z = f[f.length - 1];
-
-        if (e.shiftKey && document.activeElement === a) {
-          e.preventDefault();
-          z.focus();
-
-        } else if (!e.shiftKey && document.activeElement === z) {
-          e.preventDefault();
-          a.focus();
-        }
+    doneBtn.addEventListener('click',confirm);
+    picker.querySelector('.av-close').addEventListener('click',function(){closePicker()});
+    picker.addEventListener('mousedown',function(e){if(e.target===picker&&!required)closePicker()});
+    picker.addEventListener('keydown',function(e){
+      if(e.key==='Escape'){e.stopPropagation();if(!required)closePicker();return}
+      if(e.key==='Tab'){
+        var f=[].filter.call(picker.querySelectorAll('button:not([disabled])'),function(n){return n.offsetParent!==null});
+        if(!f.length)return;var a=f[0],z=f[f.length-1];
+        if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus()}
+        else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus()}
       }
     });
   }
 
-  function paintModal() {
-    if (!mdl) return;
-
-    if (!data) {
-      mSub.textContent = 'اطلاعات مصرف هنوز دریافت نشده است.';
-
-      mTokBar.style.width = '0';
-      mMsgBar.style.width = '0';
-      mMsg.textContent = '—';
-      mLeft.textContent = '';
-
-      mPrim.textContent = 'باشه';
-      mSec.classList.add('hidden');
-
-      return;
-    }
-
-    var pt = pct(data.tok, data.tokMax),
-        pm = pct(data.msg, data.msgMax),
-        ex = exhausted();
-
-    g('usTok').textContent =
-      fa(shown) + ' / ' + fa(data.tokMax);
-
-    mMsg.textContent =
-      fa(data.msg) + ' / ' + fa(data.msgMax);
-
-    mTokBar.style.width = pt + '%';
-    mTokBar.style.background = COLOR[level(pt)];
-
-    mMsgBar.style.width = pm + '%';
-    mMsgBar.style.background = COLOR[level(pm)];
-
-    mLeft.textContent =
-      'باقی‌مانده: ' +
-      fa(Math.max(0, data.tokMax - data.tok)) +
-      ' توکن · ' +
-      fa(Math.max(0, data.msgMax - data.msg)) +
-      ' پیام';
-
-    mSub.textContent = ex
-      ? 'سهمیه‌ی امروز شما تمام شده است. برای شارژ حساب، مستقیم به پشتیبانی پیام بدهید.'
-      : 'سهمیه هر شب نیمه‌شب (به وقت تهران) دوباره شارژ می‌شود.';
-
-    mPrim.textContent = ex
-      ? 'پیام به پشتیبانی'
-      : 'باشه';
-
-    mSec.classList.toggle('hidden', !ex);
+  function select(id,silent){
+    if(!find(id))return;
+    var changed=selected!==id;selected=id;
+    items.forEach(function(b){var on=b.getAttribute('data-id')===id;b.classList.toggle('sel',on);b.setAttribute('aria-checked',on?'true':'false')});
+    grid.classList.add('has-sel');
+    imgs.forEach(function(im){im.classList.toggle('on',im.getAttribute('data-id')===id)});
+    preview.classList.add('has');
+    if(changed&&!silent){preview.classList.remove('pop');void preview.offsetWidth;preview.classList.add('pop')}
+    doneBtn.disabled=false;
   }
 
-  function openModal(from) {
-    if (!mdl) {
-      buildModal();
-    }
-
-    if (mdl.classList.contains('open')) return;
-
-    mLast = from || document.activeElement;
-
-    paintModal();
-
-    void mdl.offsetWidth;
-
-    mdl.classList.add('open');
-    mdl.setAttribute('aria-hidden', 'false');
-
-    setTimeout(function () {
-      try {
-        mPrim.focus({ preventScroll: true });
-      } catch (e) {}
-    }, 80);
-
-    refresh();
+  function openPicker(isRequired){
+    if(!picker)build();
+    if(picker.classList.contains('open'))return;
+    required=!!isRequired;
+    picker.classList.toggle('req',required);
+    doneBtn.textContent=required?'ادامه':'ذخیره';
+    var cur=load();
+    selected=null;grid.classList.remove('has-sel');preview.classList.remove('has','pop');doneBtn.disabled=true;
+    items.forEach(function(b){b.classList.remove('sel');b.setAttribute('aria-checked','false')});
+    imgs.forEach(function(im){im.classList.remove('on')});
+    if(cur&&find(cur))select(cur,true);
+    lastFocus=document.activeElement;
+    void picker.offsetWidth;                       /* تا انیمیشن ورود از حالت بسته شروع شود */
+    picker.classList.add('open');picker.setAttribute('aria-hidden','false');
+    setTimeout(function(){
+      var t=picker.querySelector('.av-item.sel')||items[0];
+      try{t.focus({preventScroll:true})}catch(e){}
+    },120);
+  }
+  function closePicker(){
+    if(!picker||!picker.classList.contains('open'))return;
+    picker.classList.remove('open');picker.setAttribute('aria-hidden','true');
+    if(lastFocus&&lastFocus.focus&&document.contains(lastFocus))try{lastFocus.focus({preventScroll:true})}catch(e){}
+  }
+  function confirm(){
+    if(!selected)return;
+    save(selected);apply(selected);closePicker();
+    setTimeout(popDot,260);
   }
 
-  function closeModal(returnFocus) {
-    if (!mdl || !mdl.classList.contains('open')) return;
+  /* ---------- کلیک روی پروفایل سایدبار = تغییر پروفایل ---------- */
+  dot.setAttribute('role','button');dot.setAttribute('tabindex','0');
+  dot.setAttribute('aria-label','تغییر پروفایل');dot.setAttribute('title','تغییر پروفایل');
+  dot.addEventListener('click',function(){openPicker(false)});
+  dot.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openPicker(false)}});
 
-    mdl.classList.remove('open');
-    mdl.setAttribute('aria-hidden', 'true');
-
-    if (
-      returnFocus &&
-      mLast &&
-      mLast.isConnected &&
-      mLast.offsetParent !== null
-    ) {
-      try {
-        mLast.focus({ preventScroll: true });
-      } catch (e) {}
+  /* ---------- پیگیری ورود/خروج (فقط با خواندن وضعیت نمایش صفحه) ---------- */
+  function sync(){
+    var visible=!appEl.classList.contains('hidden');
+    if(visible&&!shown){
+      shown=true;
+      var id=load();
+      if(find(id)){apply(id)}
+      else{apply(null);setTimeout(function(){if(shown&&!find(load()))openPicker(true)},650)}
+    }else if(!visible&&shown){
+      shown=false;closePicker();apply(null);
     }
   }
+  new MutationObserver(sync).observe(appEl,{attributes:true,attributeFilter:['class']});
+  sync();
 
-  card.addEventListener('click', function () {
-    openModal(card);
-  });
-
-  if (icon) {
-    icon.addEventListener('click', function () {
-      openModal(icon);
-    });
-  }
-
-  /* ---------------- زمان‌بندی تازه‌سازی ---------------- */
-
-  new MutationObserver(function (list) {
-    for (var i = 0; i < list.length; i++) {
-      var add = list[i].addedNodes;
-
-      for (var j = 0; j < add.length; j++) {
-        var n = add[j];
-
-        if (
-          n.nodeType === 1 &&
-          n.classList &&
-          n.classList.contains('msg') &&
-          n.classList.contains('ai') &&
-          n.id !== 'typing'
-        ) {
-          clearTimeout(tmr);
-          tmr = setTimeout(refresh, 1500);
-          return;
-        }
-      }
-    }
-  }).observe(msgs, { childList: true });
-
-  document.addEventListener('visibilitychange', function () {
-    if (!document.hidden && Date.now() - last > 10000) {
-      refresh();
-    }
-  });
-
-  try {
-    sb.auth.onAuthStateChange(function () {
-      setTimeout(refresh, 300);
-    });
-  } catch (e) {}
-
-  var tries = 0;
-
-  var iv = setInterval(function () {
-    if (curUser()) {
-      clearInterval(iv);
-      refresh();
-
-    } else if (++tries > 40) {
-      clearInterval(iv);
-    }
-  }, 400);
-
-  paint(false);
+  /* پیش‌بارگذاری تا تعویض تصویرها در پیش‌نمایش بدون پرش باشد */
+  AVATARS.forEach(function(a){var im=new Image();im.src=a.src});
 })();
