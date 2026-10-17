@@ -1,11 +1,12 @@
 (function () {
-  var ENDPOINT = String((typeof APP_CONFIG !== 'undefined' && APP_CONFIG.ACTIVITY_ENDPOINT) || 'https://xcinoo3.app.n8n.cloud/webhook/unknown-ai-activity').trim();
+  var DEFAULT_ENDPOINT = 'https://xcinoo3.app.n8n.cloud/webhook/unknown-ai-activity';
+  function endpoint() { try { var u = String((typeof APP_CONFIG !== 'undefined' && APP_CONFIG.ACTIVITY_ENDPOINT) || '').trim(); if (/^https:\/\//i.test(u)) return u; } catch (e) {} return DEFAULT_ENDPOINT; }
   var waitingLogin = false;
   function getUser() { try { return (typeof user !== 'undefined' && user) ? user : null; } catch (e) { return null; } }
   function track(event) {
     var u = getUser();
     try {
-      fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
+      fetch(endpoint(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
         body: JSON.stringify({ event: event, email: u && u.email ? u.email : '', user_id: u && u.id ? u.id : '',
           screen: (window.screen ? screen.width + 'x' + screen.height : ''), lang: navigator.language || '' })
       }).catch(function () {});

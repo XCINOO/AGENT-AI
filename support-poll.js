@@ -29,7 +29,7 @@
       if (r.ok) {
         var d = await r.json();
         (d.replies || []).forEach(function (x) {
-          show('👤 پشتیبانی: ' + x.content);
+          show(I18N.t('support.replyPrefix') + x.content);
           localStorage.setItem(key(), String(x.id));
         });
       }

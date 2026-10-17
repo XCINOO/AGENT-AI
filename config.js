@@ -8,6 +8,5 @@ const APP_CONFIG = {
   AI_ENDPOINT: "https://xcinoo3.app.n8n.cloud/webhook/unknown-ai",
   SUPPORT_ENDPOINT: "https://xcinoo3.app.n8n.cloud/webhook/unknown-ai-support",
   USAGE_ENDPOINT: "https://xcinoo3.app.n8n.cloud/webhook/unknown-ai-usage",
-  FEEDBACK_ENDPOINT: "https://xcinoo3.app.n8n.cloud/webhook/unknown-ai-feedback",
   ACTIVITY_ENDPOINT: "https://xcinoo3.app.n8n.cloud/webhook/unknown-ai-activity"
 };

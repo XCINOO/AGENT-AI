@@ -12,12 +12,12 @@
   if(!appEl||!dot)return;
 
   var AVATARS=[
-    {id:'a1',src:'avatars/a1.jpg',label:'جنگجوی آبی'},
-    {id:'a2',src:'avatars/a2.jpg',label:'عینک نارنجی'},
-    {id:'a3',src:'avatars/a3.jpg',label:'همستر هکر'},
-    {id:'a4',src:'avatars/a4.jpg',label:'کابوی'},
-    {id:'a5',src:'avatars/a5.jpg',label:'فضایی'},
-    {id:'a6',src:'avatars/a6.jpg',label:'نقاب‌دار'}
+    {id:'a1',src:'avatars/a1.jpg',key:'avatar.a1'},
+    {id:'a2',src:'avatars/a2.jpg',key:'avatar.a2'},
+    {id:'a3',src:'avatars/a3.jpg',key:'avatar.a3'},
+    {id:'a4',src:'avatars/a4.jpg',key:'avatar.a4'},
+    {id:'a5',src:'avatars/a5.jpg',key:'avatar.a5'},
+    {id:'a6',src:'avatars/a6.jpg',key:'avatar.a6'}
   ];
   var CHECK='<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
   var PERSON='<svg class="ph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 20c.7-3.7 3.5-5.8 7.2-5.8s6.5 2.1 7.2 5.8"/></svg>';
@@ -48,17 +48,17 @@
     picker.id='avatarModal';picker.className='av-modal';picker.setAttribute('aria-hidden','true');
     var cells='',prev='';
     AVATARS.forEach(function(a){
-      cells+='<button type="button" class="av-item" role="radio" aria-checked="false" data-id="'+a.id+'" aria-label="'+a.label+'"><img src="'+a.src+'" alt="" draggable="false"><span class="chk">'+CHECK+'</span></button>';
+      cells+='<button type="button" class="av-item" role="radio" aria-checked="false" data-id="'+a.id+'" aria-label="'+I18N.t(a.key)+'" data-i18n-aria="'+a.key+'"><img src="'+a.src+'" alt="" draggable="false"><span class="chk">'+CHECK+'</span></button>';
       prev+='<img src="'+a.src+'" alt="" data-id="'+a.id+'" draggable="false">';
     });
     picker.innerHTML=
       '<div class="av-sheet" role="dialog" aria-modal="true" aria-labelledby="avTitle">'+
-        '<button type="button" class="iconbtn av-close" aria-label="بستن">'+CLOSE+'</button>'+
+        '<button type="button" class="iconbtn av-close" aria-label="'+I18N.t('common.close')+'" data-i18n-aria="common.close">'+CLOSE+'</button>'+
         '<div class="av-preview" aria-hidden="true">'+PERSON+prev+'</div>'+
-        '<h2 id="avTitle">پروفایلت را انتخاب کن</h2>'+
-        '<p class="av-sub">یکی از این تصویرها نمایهٔ تو خواهد بود.<br>هر وقت خواستی از پایین سایدبار می‌توانی عوضش کنی.</p>'+
+        '<h2 id="avTitle" data-i18n="avatar.title">'+I18N.t('avatar.title')+'</h2>'+
+        '<p class="av-sub" data-i18n-html="avatar.sub">'+I18N.t('avatar.sub')+'</p>'+
         '<div class="av-grid" role="radiogroup" aria-labelledby="avTitle">'+cells+'</div>'+
-        '<button type="button" class="authbutton av-done" disabled>ادامه</button>'+
+        '<button type="button" class="authbutton av-done" data-i18n="avatar.continue" disabled>'+I18N.t('avatar.continue')+'</button>'+
       '</div>';
     document.body.appendChild(picker);
     grid=picker.querySelector('.av-grid');doneBtn=picker.querySelector('.av-done');preview=picker.querySelector('.av-preview');
@@ -104,7 +104,7 @@
     if(picker.classList.contains('open'))return;
     required=!!isRequired;
     picker.classList.toggle('req',required);
-    doneBtn.textContent=required?'ادامه':'ذخیره';
+    var dk=required?'avatar.continue':'avatar.save';doneBtn.setAttribute('data-i18n',dk);doneBtn.textContent=I18N.t(dk);
     var cur=load();
     selected=null;grid.classList.remove('has-sel');preview.classList.remove('has','pop');doneBtn.disabled=true;
     items.forEach(function(b){b.classList.remove('sel');b.setAttribute('aria-checked','false')});
@@ -131,7 +131,7 @@
 
   /* ---------- کلیک روی پروفایل سایدبار = تغییر پروفایل ---------- */
   dot.setAttribute('role','button');dot.setAttribute('tabindex','0');
-  dot.setAttribute('aria-label','تغییر پروفایل');dot.setAttribute('title','تغییر پروفایل');
+  dot.setAttribute('aria-label',I18N.t('avatar.change'));dot.setAttribute('title',I18N.t('avatar.change'));dot.setAttribute('data-i18n-aria','avatar.change');dot.setAttribute('data-i18n-title','avatar.change');
   dot.addEventListener('click',function(){openPicker(false)});
   dot.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openPicker(false)}});
 

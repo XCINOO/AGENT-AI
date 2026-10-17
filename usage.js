@@ -5,7 +5,6 @@
 (function () {
   'use strict';
   var DEFAULT_ENDPOINT = 'https://xcinoo3.app.n8n.cloud/webhook/unknown-ai-usage';
-  var SUPPORT_TEXT = 'سلام، سهمیه‌ی امروزم تمام شده و می‌خواهم حسابم را شارژ کنم.';
   var COLOR = { ok: 'var(--ok)', warn: 'var(--warn-text)', hot: 'var(--err)', full: 'var(--err)' };
 
   var g = function (i) { return document.getElementById(i); };
@@ -19,7 +18,8 @@
   try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
 
   function curUser() { try { return user; } catch (e) { return null; } }
-  function fa(n) { try { return Number(n || 0).toLocaleString('fa-IR'); } catch (e) { return String(n || 0); } }
+  function fa(n) { return I18N.num(n); }   /* digits follow the active language */
+  function tr(k, p) { return I18N.t(k, p); }
   function endpoint() {
     var u = '';
     try { u = String((typeof APP_CONFIG !== 'undefined' && APP_CONFIG.USAGE_ENDPOINT) || '').trim(); } catch (e) {}
@@ -51,16 +51,16 @@
     })(performance.now ? performance.now() : 0);
   }
   function paint(animate) {
-    if (!data) { cCount.textContent = '—'; cMax.textContent = ''; cBar.style.width = '0'; cNote.textContent = 'سهمیه‌ی روزانه'; return; }
+    if (!data) { cCount.textContent = '—'; cMax.textContent = ''; cBar.style.width = '0'; cNote.textContent = tr('usage.daily'); return; }
     var pt = pct(data.tok, data.tokMax), pm = pct(data.msg, data.msgMax), worst = Math.max(pt, pm), lv = level(worst);
     card.classList.remove('warn', 'hot', 'full');
     if (lv !== 'ok') card.classList.add(lv === 'hot' ? 'full' : lv);
-    cMax.textContent = '/ ' + fa(data.tokMax) + ' توکن';
+    cMax.textContent = '/ ' + fa(data.tokMax) + ' ' + tr('usage.unit');
     cBar.style.width = pt + '%'; cBar.style.background = COLOR[level(pt)];
     var tl = Math.max(0, data.tokMax - data.tok), ml = Math.max(0, data.msgMax - data.msg);
-    cNote.textContent = exhausted() ? 'سهمیه‌ی امروز تمام شد' : fa(tl) + ' توکن · ' + fa(ml) + ' پیام مانده';
+    cNote.textContent = exhausted() ? tr('usage.exhausted') : tr('usage.left', { tok: fa(tl), msg: fa(ml) });
     if (dot) { dot.className = 'usage-dot' + (lv === 'ok' ? '' : lv === 'warn' ? ' warn' : ' full'); }
-    if (icon) icon.title = 'مصرف امروز: ' + fa(data.tok) + ' از ' + fa(data.tokMax) + ' توکن';
+    if (icon) icon.title = tr('usage.title', { used: fa(data.tok), max: fa(data.tokMax) });
     banner.classList.toggle('hidden', !exhausted());
     animateTo(data.tok, animate);
     if (mdl && mdl.classList.contains('open')) paintModal();
@@ -107,7 +107,7 @@
     setTimeout(function () {
       var si = g('supportInput');
       if (si && !si.disabled && !si.value.trim()) {
-        si.value = SUPPORT_TEXT;
+        si.value = tr('usage.supportText');
         si.dispatchEvent(new Event('input', { bubbles: true }));
       }
     }, 250);
@@ -133,13 +133,13 @@
     mdl.innerHTML =
       '<div class="cd-panel" role="dialog" aria-modal="true" aria-labelledby="usTitle" aria-describedby="usSub">' +
         '<div class="cd-icon us-ic" aria-hidden="true">' + GAUGE + '</div>' +
-        '<h2 class="cd-title" id="usTitle">مصرف امروز</h2>' +
+        '<h2 class="cd-title" id="usTitle" data-i18n="usage.label">' + tr('usage.label') + '</h2>' +
         '<p class="cd-sub" id="usSub"></p>' +
-        '<div class="us-row"><span>توکن</span><span id="usTok">—</span></div><span class="us-bar"><i id="usTokBar"></i></span>' +
-        '<div class="us-row"><span>پیام</span><span id="usMsg">—</span></div><span class="us-bar"><i id="usMsgBar"></i></span>' +
+        '<div class="us-row"><span data-i18n="usage.tokens">' + tr('usage.tokens') + '</span><span id="usTok">—</span></div><span class="us-bar"><i id="usTokBar"></i></span>' +
+        '<div class="us-row"><span data-i18n="usage.messages">' + tr('usage.messages') + '</span><span id="usMsg">—</span></div><span class="us-bar"><i id="usMsgBar"></i></span>' +
         '<div class="us-left" id="usLeft"></div>' +
-        '<div class="us-note">تعداد توکن تقریبی است و از روی طول متن حساب می‌شود.</div>' +
-        '<div class="cd-actions"><button type="button" class="cd-btn cd-keep" id="usPrim"></button><button type="button" class="cd-btn us-sec" id="usSec">بستن</button></div>' +
+        '<div class="us-note" data-i18n="usage.note">' + tr('usage.note') + '</div>' +
+        '<div class="cd-actions"><button type="button" class="cd-btn cd-keep" id="usPrim"></button><button type="button" class="cd-btn us-sec" id="usSec" data-i18n="common.close">' + tr('common.close') + '</button></div>' +
       '</div>';
     document.body.appendChild(mdl);
     mSub = g('usSub'); mTokBar = g('usTokBar'); mMsg = g('usMsg'); mMsgBar = g('usMsgBar');
@@ -161,20 +161,18 @@
   function paintModal() {
     if (!mdl) return;
     if (!data) {
-      mSub.textContent = 'اطلاعات مصرف هنوز دریافت نشده است.';
+      mSub.textContent = tr('usage.noData');
       mTokBar.style.width = '0'; mMsgBar.style.width = '0'; mMsg.textContent = '—'; mLeft.textContent = '';
-      mPrim.textContent = 'باشه'; mSec.classList.add('hidden'); return;
+      mPrim.textContent = tr('usage.ok'); mSec.classList.add('hidden'); return;
     }
     var pt = pct(data.tok, data.tokMax), pm = pct(data.msg, data.msgMax), ex = exhausted();
     g('usTok').textContent = fa(shown) + ' / ' + fa(data.tokMax);
     mMsg.textContent = fa(data.msg) + ' / ' + fa(data.msgMax);
     mTokBar.style.width = pt + '%'; mTokBar.style.background = COLOR[level(pt)];
     mMsgBar.style.width = pm + '%'; mMsgBar.style.background = COLOR[level(pm)];
-    mLeft.textContent = 'باقی‌مانده: ' + fa(Math.max(0, data.tokMax - data.tok)) + ' توکن · ' + fa(Math.max(0, data.msgMax - data.msg)) + ' پیام';
-    mSub.textContent = ex
-      ? 'سهمیه‌ی امروز شما تمام شده است. برای شارژ حساب، مستقیم به پشتیبانی پیام بدهید.'
-      : 'سهمیه هر شب نیمه‌شب (به وقت تهران) دوباره شارژ می‌شود.';
-    mPrim.textContent = ex ? 'پیام به پشتیبانی' : 'باشه';
+    mLeft.textContent = tr('usage.leftLong', { tok: fa(Math.max(0, data.tokMax - data.tok)), msg: fa(Math.max(0, data.msgMax - data.msg)) });
+    mSub.textContent = ex ? tr('usage.banner') : tr('usage.resets');
+    mPrim.textContent = ex ? tr('usage.toSupport') : tr('usage.ok');
     mSec.classList.toggle('hidden', !ex);
   }
   function openModal(from) {
@@ -216,5 +214,6 @@
     if (curUser()) { clearInterval(iv); refresh(); }
     else if (++tries > 40) clearInterval(iv);
   }, 400);
+  document.addEventListener('langchange', function () { shown = data ? data.tok : 0; paint(false); paintModal(); });
   paint(false);
 })();
