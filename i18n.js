@@ -43,7 +43,7 @@
 
       'chat.welcome.title': 'چه چیزی در ذهنت است؟',
       'chat.welcome.sub': 'گفتگو را شروع کن.',
-      'chat.new': '＋ گفتگوی جدید',
+      'chat.new': 'گفتگوی جدید',
       'chat.defaultTitle': 'گفتگوی جدید',
       'chat.search.placeholder': 'جست‌وجو در گفتگوها',
       'chat.search.clear': 'پاک کردن عبارت جست‌وجو',
@@ -178,7 +178,7 @@
 
       'chat.welcome.title': "What's on your mind?",
       'chat.welcome.sub': 'Start a conversation.',
-      'chat.new': '＋ New chat',
+      'chat.new': 'New chat',
       'chat.defaultTitle': 'New chat',
       'chat.search.placeholder': 'Search chats',
       'chat.search.clear': 'Clear search',
