@@ -16,6 +16,12 @@
       { t: 'Plan & brainstorm', d: 'Ideas and step-by-step plans', p: 'Create a step-by-step plan for this goal: ' }
     ]
   };
+  var ICONS = [
+    '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
+    '<path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/>',
+    '<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+    '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>'
+  ];
   var g = function (i) { return document.getElementById(i); };
   function lang() { return document.documentElement.getAttribute('lang') === 'en' ? 'en' : 'fa'; }
   function render() {
@@ -23,12 +29,16 @@
     if (!w || w.querySelector('.suggest')) return;
     var box = document.createElement('div');
     box.className = 'suggest';
-    SETS[lang()].forEach(function (s) {
+    SETS[lang()].forEach(function (s, idx) {
       var b = document.createElement('button');
       b.type = 'button';
+      var ic = document.createElement('i'); ic.className = 'si'; ic.setAttribute('aria-hidden', 'true');
+      ic.innerHTML = '<svg viewBox="0 0 24 24" focusable="false">' + ICONS[idx % ICONS.length] + '</svg>';
+      var tx = document.createElement('div'); tx.className = 'st';
       var t = document.createElement('b'); t.textContent = s.t;
       var d = document.createElement('span'); d.textContent = s.d;
-      b.appendChild(t); b.appendChild(d);
+      tx.appendChild(t); tx.appendChild(d);
+      b.appendChild(ic); b.appendChild(tx);
       b.addEventListener('click', function () {
         var i = g('input'); if (!i) return;
         i.value = s.p;

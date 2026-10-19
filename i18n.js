@@ -12,6 +12,9 @@
       'lang.switchAria': 'تغییر زبان به انگلیسی',
       'logo.alt': 'لوگوی سایت',
 
+      'auth.title': 'ایده‌هایت، بزرگ‌تر از همیشه',
+      'auth.tag': 'دستیار هوشمندی که برای فکر کردن، نوشتن و ساختن کنارت است.',
+      'auth.or': 'یا',
       'auth.sub.email': 'ایمیل و شماره تلفن خود را وارد کنید تا کد ورود برایتان ارسال شود.',
       'auth.sub.otp': 'کد ۶ رقمی ارسال‌شده به ایمیل را وارد کنید.',
       'auth.email.placeholder': 'you@example.com',
@@ -147,6 +150,9 @@
       'lang.switchAria': 'Switch language to Persian',
       'logo.alt': 'Site logo',
 
+      'auth.title': 'Your ideas, amplified',
+      'auth.tag': 'A calm, capable AI that helps you think, write and build.',
+      'auth.or': 'or',
       'auth.sub.email': 'Enter your email and phone number and we will send you a sign-in code.',
       'auth.sub.otp': 'Enter the 6-digit code sent to your email.',
       'auth.email.placeholder': 'you@example.com',

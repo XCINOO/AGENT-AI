@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="./account.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
 <style>
 /* =====================================================================
    UNKNOWN AI — PREMIUM UI (v5)
@@ -29,27 +29,31 @@
   --font:Inter,Vazirmatn,ui-sans-serif,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
 
   /* surfaces */
-  --bg:#151515;
-  --side-bg:#101010;
-  --surface:#1d1d1d;
-  --surface-2:#262626;
-  --surface-3:#303030;
+  --bg:#0e0c14;
+  --side-bg:#0a090f;
+  --surface:#15131d;
+  --surface-2:#1d1a28;
+  --surface-3:#292536;
 
   /* text */
-  --text:#ececec;
-  --text-2:#b6b6bb;
-  --muted:#8e8e95;
+  --text:#ede9f7;
+  --text-2:#b9b3cc;
+  --muted:#8d87a3;
 
   /* lines */
-  --line:rgba(255,255,255,.08);
-  --line-2:rgba(255,255,255,.14);
+  --line:rgba(190,175,255,.09);
+  --line-2:rgba(190,175,255,.17);
 
   /* one refined accent */
-  --accent:#d97757;
-  --accent-soft:rgba(217,119,87,.14);
-  --accent-line:rgba(217,119,87,.38);
+  --accent:#a78bfa;
+  --accent-soft:rgba(139,108,255,.16);
+  --accent-line:rgba(167,139,250,.42);
   --on-accent:#fff;
-  --ring:rgba(217,119,87,.16);
+  --grad:linear-gradient(135deg,#6a5cff 0%,#9a6bff 55%,#c07bff 100%);
+  --display:Newsreader,Vazirmatn,Georgia,serif;
+  --aurora:1;
+  --bubble-user:linear-gradient(180deg,rgba(139,108,255,.22),rgba(139,108,255,.12));
+  --ring:rgba(139,108,255,.22);
 
   /* state */
   --ok:#7cc6a8;--ok-line:rgba(124,198,168,.35);
@@ -59,11 +63,11 @@
   /* depth */
   --shadow-sm:0 1px 2px rgba(0,0,0,.3);
   --shadow:0 10px 40px rgba(0,0,0,.38),0 1px 0 rgba(255,255,255,.04) inset;
-  --shadow-pop:0 24px 70px rgba(0,0,0,.55);
-  --glass:rgba(29,29,29,.78);
+  --shadow-pop:0 24px 70px rgba(4,2,14,.65);
+  --glass:rgba(21,19,29,.78);
   --backdrop:rgba(0,0,0,.55);
-  --hover-bg:rgba(255,255,255,.06);
-  --active-bg:rgba(255,255,255,.09);
+  --hover-bg:rgba(190,175,255,.07);
+  --active-bg:rgba(190,175,255,.12);
 
   /* radii */
   --r-sm:10px;--r-md:14px;--r-lg:20px;--r-xl:28px;
@@ -77,8 +81,8 @@
 
   /* ---- legacy names still referenced by account.js / usage.js / account.css ---- */
   --panel:var(--surface);--panel2:var(--surface-2);--hover:var(--surface-2);--pill:var(--surface-2);
-  --bg-0:rgba(21,21,21,0);--item-hover:var(--hover-bg);--item-text:var(--text-2);
-  --muted2:var(--muted);--composer-bg:var(--surface);--composer-line:var(--line-2);--composer-focus:rgba(255,255,255,.3);
+  --bg-0:rgba(14,12,20,0);--item-hover:var(--hover-bg);--item-text:var(--text-2);
+  --muted2:var(--muted);--composer-bg:var(--surface);--composer-line:var(--line-2);--composer-focus:rgba(167,139,250,.5);
   --focus-ring:var(--ring);--ai-bg:transparent;--ai-text:var(--text);--user-bg:var(--surface-2);--user-text:var(--text);
   --btn-bg:var(--text);--btn-text:var(--bg);--card-bg:var(--surface);--card-hover:var(--surface-2);
   --card-line:var(--line);--card-line-hover:var(--line-2);--modal-bg:var(--surface);--modal-backdrop:var(--backdrop);
@@ -87,32 +91,34 @@
 }
 :root[data-theme="light"]{
   color-scheme:light;
-  --bg:#faf9f7;
-  --side-bg:#f3f2ef;
+  --bg:#faf9fd;
+  --side-bg:#f3f1f9;
   --surface:#ffffff;
-  --surface-2:#f0eeea;
-  --surface-3:#e7e4df;
-  --text:#1b1b1c;
-  --text-2:#47474c;
-  --muted:#6b6b73;
-  --line:rgba(0,0,0,.08);
-  --line-2:rgba(0,0,0,.14);
-  --accent:#c8643f;
-  --accent-soft:rgba(200,100,63,.10);
-  --accent-line:rgba(200,100,63,.4);
-  --ring:rgba(200,100,63,.16);
+  --surface-2:#f0edf8;
+  --surface-3:#e5e0f2;
+  --text:#17151f;
+  --text-2:#46425a;
+  --muted:#6a6580;
+  --line:rgba(60,40,120,.09);
+  --line-2:rgba(60,40,120,.17);
+  --accent:#6d4ae0;
+  --accent-soft:rgba(109,74,224,.10);
+  --accent-line:rgba(109,74,224,.4);
+  --ring:rgba(109,74,224,.16);
   --ok:#1f7a5c;--ok-line:rgba(31,122,92,.4);
   --err:#c62828;
   --warn-bg:#fff4dc;--warn-text:#7a5200;
   --shadow-sm:0 1px 2px rgba(20,20,20,.06);
-  --shadow:0 8px 30px rgba(30,25,20,.09),0 1px 2px rgba(30,25,20,.05);
-  --shadow-pop:0 24px 60px rgba(30,25,20,.18);
+  --shadow:0 8px 30px rgba(50,30,110,.10),0 1px 2px rgba(50,30,110,.06);
+  --shadow-pop:0 24px 60px rgba(50,30,110,.20);
   --glass:rgba(255,255,255,.82);
-  --backdrop:rgba(30,25,20,.32);
-  --hover-bg:rgba(0,0,0,.045);
-  --active-bg:rgba(0,0,0,.07);
-  --bg-0:rgba(250,249,247,0);
-  --composer-focus:rgba(0,0,0,.3);
+  --backdrop:rgba(30,20,70,.34);
+  --hover-bg:rgba(60,40,120,.05);
+  --active-bg:rgba(60,40,120,.09);
+  --bg-0:rgba(250,249,253,0);
+  --composer-focus:rgba(109,74,224,.45);
+  --aurora:.55;
+  --bubble-user:linear-gradient(180deg,rgba(109,74,224,.12),rgba(109,74,224,.07));
 }
 
 /* ---------- 2. Base ---------- */
@@ -572,6 +578,91 @@ textarea::placeholder{color:var(--muted);opacity:1}
 .settings-row strong{font-size:14px;font-weight:600}
 
 
+
+/* =====================================================================
+   SIGNATURE LAYER (v6) — violet identity, serif display type, ambient aurora,
+   Claude-style sign-in. Overrides the base layer above.
+   ===================================================================== */
+@keyframes aurora{0%{transform:translate3d(-3%,-1%,0) scale(1)}100%{transform:translate3d(3%,4%,0) scale(1.1)}}
+@keyframes orbBreath{0%,100%{box-shadow:0 0 0 1px rgba(255,255,255,.22) inset,0 12px 44px rgba(124,92,255,.5)}50%{box-shadow:0 0 0 1px rgba(255,255,255,.28) inset,0 14px 60px rgba(160,110,255,.65)}}
+
+/* ---- sign-in: open, centered, editorial (no card) ---- */
+.auth{background:var(--bg);background-image:none}
+.auth::before{content:"";position:fixed;left:-10%;right:-10%;top:-25%;height:85%;z-index:-1;pointer-events:none;opacity:var(--aurora);
+  background:radial-gradient(48% 55% at 28% 38%,rgba(110,84,255,.40),transparent 70%),radial-gradient(42% 50% at 74% 26%,rgba(190,110,255,.26),transparent 70%),radial-gradient(36% 40% at 55% 72%,rgba(70,120,255,.18),transparent 70%);
+  filter:blur(36px);animation:aurora 24s ease-in-out infinite alternate}
+.authcard{width:min(400px,100%);padding:0;background:none;border:0;border-radius:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;animation:fadein .7s ease backwards}
+.authwrap{padding-top:calc(72px + env(safe-area-inset-top))}
+.logo-auth{position:fixed;top:calc(26px + env(safe-area-inset-top));inset-inline-start:28px;width:116px;margin:0;z-index:2}
+.auth-mark{position:relative;width:56px;height:56px;margin:0 auto 20px;border-radius:50%;background:var(--grad);animation:orbBreath 6s ease-in-out infinite,appear .8s var(--ease) backwards}
+.auth-mark::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(60% 60% at 34% 28%,rgba(255,255,255,.55),transparent 62%)}
+.auth-title{margin:0 0 12px;font-family:var(--display);font-weight:400;font-size:clamp(36px,7vw,46px);line-height:1.12;letter-spacing:-.025em;text-wrap:balance;animation:rise .8s .05s var(--ease) backwards}
+html[lang="fa"] .auth-title{font-family:Vazirmatn,Inter,sans-serif;font-weight:700;font-size:clamp(28px,6vw,36px);line-height:1.55;letter-spacing:-.01em}
+.auth-tag{margin:0 0 24px;font-size:16px;line-height:1.85;color:var(--muted);text-wrap:balance;animation:rise .8s .12s var(--ease) backwards}
+.sub{font-size:13.5px;margin:0 0 14px}
+#loginHome{animation:rise .8s .18s var(--ease) backwards}
+.authinput{height:52px;border-radius:14px}
+.authbutton{height:52px;border-radius:14px}
+.auth-or{display:flex;align-items:center;gap:14px;margin:24px 0 18px;color:var(--muted);font-size:13px;animation:fadein .8s .3s ease backwards}
+.auth-or::before,.auth-or::after{content:"";flex:1;height:1px;background:var(--line-2)}
+.unicard{margin-top:0;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 10px;padding:14px 16px;border-radius:14px;background:transparent;box-shadow:none;animation:fadein .8s .34s ease backwards}
+.unicard:hover{background:var(--hover-bg);box-shadow:none;transform:none;border-color:var(--accent-line)}
+.unititle{font-size:14px}
+.freebadge{margin-top:0}
+.unisub{flex-basis:100%;margin-top:2px}
+.authfoot{margin-top:26px}
+
+/* ---- ambient aurora behind the empty state ---- */
+.homebg::before{inset:-15% -10% 35% -10%;background:radial-gradient(46% 55% at 30% 40%,rgba(110,84,255,.34),transparent 70%),radial-gradient(40% 50% at 72% 30%,rgba(190,110,255,.22),transparent 70%),radial-gradient(34% 40% at 52% 75%,rgba(70,120,255,.16),transparent 70%);
+  opacity:var(--aurora);filter:blur(40px);animation:aurora 26s ease-in-out infinite alternate}
+.homebg::after{display:none}
+.main:not(:has(.welcome)) .homebg{opacity:0}
+
+/* ---- serif display type ---- */
+.welcome h1{font-family:var(--display);font-weight:400;font-size:clamp(32px,5.4vw,46px);line-height:1.2;letter-spacing:-.025em}
+html[lang="fa"] .welcome h1{font-family:Vazirmatn,Inter,sans-serif;font-weight:700;font-size:clamp(28px,4.6vw,38px);line-height:1.55;letter-spacing:-.01em}
+.unipanel h2,.av-sheet h2,.soon-panel h2,.settings-head h2{font-family:var(--display);font-weight:500;letter-spacing:-.015em}
+html[lang="fa"] .unipanel h2,html[lang="fa"] .av-sheet h2,html[lang="fa"] .soon-panel h2,html[lang="fa"] .settings-head h2{font-family:Vazirmatn,Inter,sans-serif;font-weight:700}
+.welcome p{font-size:16px}
+.logo-welcome{width:clamp(150px,44vw,180px);margin-bottom:26px;opacity:.9}
+
+/* ---- starter cards with icon tiles ---- */
+.suggest button{flex-direction:row;align-items:center;gap:13px;padding:14px 16px}
+.suggest .si{flex:none;width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent-line);transition:background-color var(--dur-2) ease,color var(--dur-2) ease}
+.suggest .si svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.suggest button:hover .si{background:var(--grad);color:#fff;box-shadow:none}
+.suggest .st{display:flex;flex-direction:column;gap:2px;min-width:0}
+.suggest button:hover{border-color:var(--accent-line)}
+
+/* ---- conversation ---- */
+.msg.ai .avatar{background:var(--grad);color:#fff;font-size:11px;box-shadow:0 4px 14px rgba(124,92,255,.35)}
+.msg.user .bubble{background:var(--bubble-user);border-color:var(--accent-line)}
+.send{background:var(--grad);color:#fff;box-shadow:0 4px 16px rgba(124,92,255,.38)}
+.send:disabled{box-shadow:none}
+.composer{border-color:var(--line-2)}
+.composer:focus-within{border-color:var(--accent-line)}
+
+/* ---- sidebar identity ---- */
+.new{background:var(--accent-soft);border-color:var(--accent-line);color:var(--text);box-shadow:none}
+.new:hover{background:var(--accent-soft);border-color:var(--accent);filter:brightness(1.15)}
+.new::before{color:var(--accent)}
+.userdot,#userdot{background:var(--grad);color:#fff;box-shadow:none}
+.chatitem:hover,.chatitem.active{background:var(--hover-bg)}
+.chatitem.active{box-shadow:inset 2px 0 0 var(--accent)}
+.settings-tab.active{background:var(--accent-soft);color:var(--accent)}
+.support-card{background:linear-gradient(160deg,var(--accent-soft),transparent 70%)}
+.cd-keep,.token-banner-btn,.soon-ok,.settings-primary{background:var(--grad);color:#fff}
+.cd-keep:hover:not(:disabled),.soon-ok:hover,.settings-primary:hover:not(:disabled){filter:brightness(1.1)}
+.smsg.me .sbubble{background:var(--bubble-user);border:1px solid var(--accent-line)}
+.support-state.ready i{background:var(--ok)}
+
+@media(max-width:750px){
+  .authwrap{padding-top:calc(76px + env(safe-area-inset-top))}
+  .logo-auth{inset-inline-start:20px;top:calc(22px + env(safe-area-inset-top));width:100px}
+  .auth-mark{width:52px;height:52px;margin-bottom:22px}
+}
+@media(prefers-reduced-motion:reduce){.auth::before,.homebg::before,.auth-mark{animation:none!important}}
+
 /* ---------- 11. Theme-switch transition ---------- */
 @media (prefers-reduced-motion:no-preference){
   .theme-anim,.theme-anim *,.theme-anim *::before,.theme-anim *::after{transition:background-color .35s ease,color .35s ease,border-color .35s ease,box-shadow .35s ease,fill .35s ease,stroke .35s ease!important}
@@ -635,6 +726,9 @@ textarea::placeholder{color:var(--muted);opacity:1}
  <div class="authwrap">
   <div class="authcard">
    <img class="logo logo-auth" src="data:image/png;base64,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" alt="لوگوی سایت" data-i18n-alt="logo.alt">
+   <div class="auth-mark" aria-hidden="true"></div>
+   <h1 class="auth-title" data-i18n="auth.title">ایده‌هایت، بزرگ‌تر از همیشه</h1>
+   <p class="auth-tag" data-i18n="auth.tag">دستیار هوشمندی که برای فکر کردن، نوشتن و ساختن کنارت است.</p>
    <div id="loginHome">
     <div id="loginFormWrap">
      <div id="sub" class="sub" data-i18n="auth.sub.email">ایمیل و شماره تلفن خود را وارد کنید تا کد ورود برایتان ارسال شود.</div>
@@ -652,6 +746,7 @@ textarea::placeholder{color:var(--muted);opacity:1}
      <div id="authmsg" class="authmsg"></div>
     </div>
    </div>
+   <div class="auth-or" aria-hidden="true"><span data-i18n="auth.or">یا</span></div>
    <div id="uniCard" class="unicard" role="button" tabindex="0" aria-haspopup="dialog" aria-expanded="false">
     <div class="unititle" data-i18n="auth.uni.title">ورود مخصوص دانشگاه آزاد شهرستان بیجار</div>
     <span class="freebadge">Free</span>
