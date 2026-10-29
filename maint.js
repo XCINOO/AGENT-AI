@@ -2,8 +2,8 @@
    برای نمایش صفحه‌ی «در حال بروزرسانی» مقدار را true بگذار، بعد از اتمام کار false.
    خودت با افزودن ?preview به آخر آدرس سایت می‌توانی سایت واقعی را ببینی. */
 (function () {
-  var MAINTENANCE = false;
-  var preview = false;
+  var MAINTENANCE = true;
+  var preview = true;
   try {
     var hasPreview = /[?&]preview\b/.test(location.search);
     if (hasPreview) sessionStorage.setItem("maint_preview", "1");
