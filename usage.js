@@ -1,10 +1,8 @@
 /* مصرف روزانه‌ی توکن و پیام — نمایش در سایدبار/نوار بالا، پنجره‌ی جزئیات، و هدایت به پشتیبانی وقتی سهمیه تمام شد.
-   فقط لایه‌ی رابط کاربری: عدد مصرف از ورک‌فلوی n8n («Unknown AI - Token Usage») خوانده می‌شود.
-   آدرس را می‌شود در config.js با APP_CONFIG.USAGE_ENDPOINT عوض کرد (مثل SUPPORT_ENDPOINT).
-   مسدودکردن واقعی بعد از پرداخت سهمیه با خود ورک‌فلوی چت است؛ اینجا فقط نمایش و راهنمایی کاربر است. */
+   داده از Worker: POST API_BASE_URL/api/usage با Authorization Bearer.
+   مسدودکردن واقعی بعد از اتمام سهمیه در خود endpoint چت است؛ اینجا فقط نمایش است. */
 (function () {
   'use strict';
-  var DEFAULT_ENDPOINT = 'https://xcinoo3.app.n8n.cloud/webhook/unknown-ai-usage';
   var COLOR = { ok: 'var(--ok)', warn: 'var(--warn-text)', hot: 'var(--err)', full: 'var(--err)' };
 
   var g = function (i) { return document.getElementById(i); };
@@ -21,9 +19,13 @@
   function fa(n) { return I18N.num(n); }   /* digits follow the active language */
   function tr(k, p) { return I18N.t(k, p); }
   function endpoint() {
-    var u = '';
-    try { u = String((typeof APP_CONFIG !== 'undefined' && APP_CONFIG.USAGE_ENDPOINT) || '').trim(); } catch (e) {}
-    return /^https:\/\//i.test(u) ? u : DEFAULT_ENDPOINT;
+    try {
+      if (typeof apiUrl === 'function') {
+        var u = apiUrl('/api/usage');
+        if (u) return u;
+      }
+    } catch (e) {}
+    return '';
   }
   function pct(a, b) { return b > 0 ? Math.min(100, a / b * 100) : 0; }
   function level(p) { return p >= 100 ? 'full' : p >= 90 ? 'hot' : p >= 70 ? 'warn' : 'ok'; }
@@ -74,7 +76,7 @@
   async function refresh() {
     var u = curUser();
     sync();
-    if (!u || busy) return;
+    if (!u || busy || !endpoint()) return;
     busy = true;
     var ctl = null, timer = null;
     try {
@@ -83,9 +85,10 @@
       ctl = ('AbortController' in window) ? new AbortController() : null;
       timer = setTimeout(function () { if (ctl) ctl.abort(); }, 10000);
       var r = await fetch(endpoint(), {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (at || '') },
         signal: ctl ? ctl.signal : undefined,
-        body: JSON.stringify({ user_id: u.id, access_token: at })
+        body: '{}'
       });
       if (!r.ok) throw new Error('http ' + r.status);
       var d = await r.json();

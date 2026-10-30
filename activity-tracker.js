@@ -1,14 +1,30 @@
+/* Activity tracking — only fires when ACTIVITY_ENDPOINT is a real https URL. */
 (function () {
-  var DEFAULT_ENDPOINT = 'https://xcinoo3.app.n8n.cloud/webhook/unknown-ai-activity';
-  function endpoint() { try { var u = String((typeof APP_CONFIG !== 'undefined' && APP_CONFIG.ACTIVITY_ENDPOINT) || '').trim(); if (/^https:\/\//i.test(u)) return u; } catch (e) {} return DEFAULT_ENDPOINT; }
+  function endpoint() {
+    try {
+      var u = String((typeof APP_CONFIG !== 'undefined' && APP_CONFIG.ACTIVITY_ENDPOINT) || '').trim();
+      if (/^https:\/\//i.test(u) && !/REPLACE/i.test(u)) return u;
+    } catch (e) {}
+    return '';
+  }
   var waitingLogin = false;
   function getUser() { try { return (typeof user !== 'undefined' && user) ? user : null; } catch (e) { return null; } }
   function track(event) {
+    var url = endpoint();
+    if (!url) return; // empty ACTIVITY_ENDPOINT → completely disabled, never fetch('')
     var u = getUser();
     try {
-      fetch(endpoint(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
-        body: JSON.stringify({ event: event, email: u && u.email ? u.email : '', user_id: u && u.id ? u.id : '',
-          screen: (window.screen ? screen.width + 'x' + screen.height : ''), lang: navigator.language || '' })
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        body: JSON.stringify({
+          event: event,
+          email: u && u.email ? u.email : '',
+          user_id: u && u.id ? u.id : '',
+          screen: (window.screen ? screen.width + 'x' + screen.height : ''),
+          lang: navigator.language || ''
+        })
       }).catch(function () {});
     } catch (e) {}
   }
@@ -34,6 +50,9 @@
       if (n.nodeType === 1 && n.classList && n.classList.contains('msg') && n.classList.contains('user') && n.classList.contains('enter')) track('message');
     }); }); }).observe(box, { childList: true });
   }
-  function start() { watchLogin(); watchVisit(); watchMessages(); }
+  function start() {
+    if (!endpoint()) return; // no network listeners when disabled
+    watchLogin(); watchVisit(); watchMessages();
+  }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
