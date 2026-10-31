@@ -123,6 +123,7 @@ body::after{
 html[lang="fa"] .welcome h1,html[lang="fa"] .auth-title{font-family:Vazirmatn,Poppins,sans-serif;font-weight:600;letter-spacing:0;unicode-bidi:plaintext}
 .welcome p,.auth-tag,.sub{color:var(--text-2)}
 .welcome h1{background:linear-gradient(180deg,#fff 30%,#c9c3d6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+html[lang="fa"] .welcome h1,html[lang="fa"] .welcome h1 .rt-item{background:none!important;-webkit-background-clip:border-box!important;background-clip:border-box!important;-webkit-text-fill-color:var(--text)!important;color:var(--text)!important}
 :root[data-theme="light"] .welcome h1{background:none;-webkit-text-fill-color:var(--text)}
 
 /* ---------- Glass: sidebar, cards, composer, modals ---------- */
