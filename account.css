@@ -24,7 +24,8 @@ html[dir="ltr"] .new,html[dir="ltr"] .sres{text-align:left}
 html[dir="ltr"] .menu{right:auto;left:12px}
 html[dir="ltr"] .topctl{left:auto;right:10px}
 html[dir="ltr"] .uniclose,html[dir="ltr"] .soon-close,html[dir="ltr"] .av-close{left:auto;right:12px}
-html[dir="ltr"] .usage-dot{right:auto;left:5px}
+html[dir="ltr"] .usage-dot,html[dir="ltr"] .support-unread{right:auto;left:5px}
+html[dir="ltr"] .support-toast{inset-inline-start:auto;inset-inline-end:12px}
 /* chat bubbles keep the same physical sides in both languages: user on the right, assistant on the left */
 html[dir="ltr"] .msg.user{flex-direction:row-reverse}
 html[dir="ltr"] .msg.ai{flex-direction:row}

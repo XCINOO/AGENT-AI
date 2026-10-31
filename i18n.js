@@ -92,6 +92,13 @@
       'usage.resets': 'سهمیه هر شب نیمه‌شب (به وقت تهران) دوباره شارژ می‌شود.',
       'usage.note': 'تعداد توکن تقریبی است و از روی طول متن حساب می‌شود.',
 
+      'premium.title': 'ارتقا به Premium',
+      'premium.body': 'سهمیه‌ی مصرف امروز شما تمام شده است. با ارتقا به Premium می‌توانید بدون محدودیت روزانه ادامه دهید.',
+      'premium.upgrade': 'ارتقا به Premium',
+      'premium.placeholder': 'پرداخت هنوز فعال نشده است. این دکمه فعلاً نمایشی است و دسترسی Premium داده نمی‌شود.',
+      'support.unreadNotice': 'پیام جدیدی از طرف پشتیبانی دارید',
+      'support.unreadAria': 'پیام خوانده‌نشده از پشتیبانی',
+
       'support.title': 'ارتباط با پشتیبانی',
       'support.sub': 'سؤال یا مشکلی دارید؟ برای ما پیام بگذارید.',
       'support.start': 'شروع گفت‌وگو',
@@ -229,6 +236,13 @@
       'usage.ok': 'OK',
       'usage.resets': 'The allowance resets every night at midnight (Tehran time).',
       'usage.note': 'Token counts are approximate and estimated from text length.',
+
+      'premium.title': 'Upgrade to Premium',
+      'premium.body': 'Your usage quota for today is exhausted. Upgrade to Premium to keep going without the daily limit.',
+      'premium.upgrade': 'Upgrade to Premium',
+      'premium.placeholder': 'Payments are not connected yet. This button is a placeholder and does not grant Premium access.',
+      'support.unreadNotice': 'You have a new message from support',
+      'support.unreadAria': 'Unread support message',
 
       'support.title': 'Contact support',
       'support.sub': 'Have a question or problem? Leave us a message.',

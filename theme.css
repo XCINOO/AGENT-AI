@@ -119,8 +119,8 @@ body::after{
 }
 
 /* ---------- Headings ---------- */
-.welcome h1,.auth-title{font-family:var(--display);font-weight:500;letter-spacing:-.01em}
-html[lang="fa"] .welcome h1,html[lang="fa"] .auth-title{font-family:Vazirmatn,Poppins,sans-serif;font-weight:600}
+.welcome h1,.auth-title{font-family:var(--display);font-weight:500;letter-spacing:0}
+html[lang="fa"] .welcome h1,html[lang="fa"] .auth-title{font-family:Vazirmatn,Poppins,sans-serif;font-weight:600;letter-spacing:0;unicode-bidi:plaintext}
 .welcome p,.auth-tag,.sub{color:var(--text-2)}
 .welcome h1{background:linear-gradient(180deg,#fff 30%,#c9c3d6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 :root[data-theme="light"] .welcome h1{background:none;-webkit-text-fill-color:var(--text)}

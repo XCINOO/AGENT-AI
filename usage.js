@@ -117,14 +117,7 @@
   }
   if (bBtn) bBtn.addEventListener('click', toSupport);
 
-  /* وقتی سهمیه پر است، ارسال انجام نشود و کاربر به پشتیبانی برود (capture روی document تا قبل از هندلرهای سایت) */
-  function stop(e) { e.preventDefault(); e.stopImmediatePropagation(); refresh(); toSupport(); }
-  document.addEventListener('click', function (e) {
-    if (exhausted() && e.target && e.target.closest && e.target.closest('#send')) stop(e);
-  }, true);
-  document.addEventListener('keydown', function (e) {
-    if (exhausted() && e.target && e.target.id === 'input' && e.key === 'Enter' && !e.shiftKey && !e.isComposing) stop(e);
-  }, true);
+  /* Quota is enforced by POST /api/chat (429 quota_exceeded). Do not block send here. */
 
   /* ---------------- پنجره‌ی جزئیات (همان الگوی پنجره‌ی تأیید حذف سایت) ---------------- */
   var mdl = null, mSub, mTokBar, mMsg, mMsgBar, mLeft, mPrim, mSec, mLast = null;

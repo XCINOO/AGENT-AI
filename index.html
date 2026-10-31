@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1 'sha256-v2HyJVGfF+x9W2HgHT55pnjiYB8+f1JGue0+Ez5dSdw=' 'sha256-U7pxkxCjveMcvc/UCxF3BcXlLn1EuDoBoGhZJNjz3c0=' 'sha256-2CJRjQxk/goB3B6plEUbc/MQH9xA8Pqk+HUU7Pm9048=' 'sha256-hOqmFj8aMyfQ24LzgyjXRl9GTiiNK9ZJUmJ05/Klszc=' ; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.workers.dev; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1 'sha256-v2HyJVGfF+x9W2HgHT55pnjiYB8+f1JGue0+Ez5dSdw=' 'sha256-AJ2lOkCc0tJi/Ud+Z+XT4eZVoXF3rATJDhLEG9fjs5E=' 'sha256-2CJRjQxk/goB3B6plEUbc/MQH9xA8Pqk+HUU7Pm9048=' 'sha256-hOqmFj8aMyfQ24LzgyjXRl9GTiiNK9ZJUmJ05/Klszc=' ; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.workers.dev; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="theme-color" content="#0a0a0b">
@@ -348,9 +348,17 @@ html[dir="rtl"] .phonerow .phonecc{padding-inline:14px 34px}
 #langToggle .langlabel::after{font-family:Inter,Vazirmatn,sans-serif;font-size:12px;font-weight:600;letter-spacing:.03em;line-height:1}
 html[lang="fa"] #langToggle .langlabel::after{content:"EN"}
 html[lang="en"] #langToggle .langlabel::after{content:"فا"}
-.usage-icon{position:relative}
+.usage-icon,#supportIcon{position:relative}
 .usage-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 2px var(--bg);transition:background-color .3s ease;pointer-events:none}
 .usage-dot.warn{background:var(--warn-text)}.usage-dot.full{background:var(--err)}
+.support-unread{position:absolute;top:5px;right:5px;min-width:8px;height:8px;border-radius:50%;background:var(--err);box-shadow:0 0 0 2px var(--bg);pointer-events:none}
+.support-unread[data-count]:not([data-count=""]):not([data-count="0"]){min-width:14px;height:14px;padding:0 3px;border-radius:99px;font-size:9px;font-weight:700;line-height:14px;color:#fff;text-align:center;font-family:Inter,sans-serif}
+.support-toast{position:fixed;top:calc(56px + env(safe-area-inset-top));inset-inline-start:12px;z-index:95;max-width:min(320px,calc(100vw - 24px));padding:10px 14px;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--line-2);color:var(--text);font-size:13px;line-height:1.7;box-shadow:var(--shadow-pop);opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity .25s ease,transform .25s var(--ease),visibility 0s linear .25s;pointer-events:none}
+.support-toast.on{opacity:1;visibility:visible;transform:none;transition:opacity .25s ease,transform .3s var(--ease),visibility 0s}
+.premium-modal{z-index:88}
+.premium-modal .cd-icon{color:var(--accent)}
+.premium-note{margin-top:12px;font-size:12.5px;line-height:1.8;color:var(--warn-text)}
+.premium-note:empty{display:none}
 
 /* ---------- 8. Conversation ---------- */
 .homebg{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden;transition:opacity 1.2s ease}
@@ -366,7 +374,7 @@ html[lang="en"] #langToggle .langlabel::after{content:"فا"}
 .welcomein{width:100%;max-width:600px;margin-top:-24px}
 .welcomein>*{animation:rise .8s var(--ease) backwards}
 .welcomein>:nth-child(2){animation-delay:.07s}.welcomein>:nth-child(3){animation-delay:.14s}.welcomein>:nth-child(4){animation-delay:.22s}
-.welcome h1{margin:0 0 10px;font-size:clamp(24px,4.4vw,32px);font-weight:600;letter-spacing:-.02em;line-height:1.45}
+.welcome h1{margin:0 0 10px;font-size:clamp(24px,4.4vw,32px);font-weight:600;letter-spacing:0;line-height:1.45;unicode-bidi:plaintext;text-wrap:balance}
 .welcome p{margin:0;font-size:15px;line-height:1.8;color:var(--muted)}
 .welcome h1.rt{display:grid}
 .rt-item{grid-area:1/1;opacity:0;transform:translateY(8px);transition:opacity .45s ease,transform .45s ease}
@@ -595,7 +603,7 @@ textarea::placeholder{color:var(--muted);opacity:1}
 .auth-mark{position:relative;width:52px;height:52px;margin:0 auto 20px;border-radius:50%;background:var(--accent);box-shadow:0 4px 16px rgba(227,59,70,.28);animation:appear .6s var(--ease) backwards}
 .auth-mark::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(60% 60% at 34% 28%,rgba(255,255,255,.35),transparent 62%)}
 .auth-title{margin:0 0 12px;font-family:var(--display);font-weight:400;font-size:clamp(36px,7vw,46px);line-height:1.12;letter-spacing:-.025em;text-wrap:balance;animation:rise .8s .05s var(--ease) backwards}
-html[lang="fa"] .auth-title{font-family:Vazirmatn,Inter,sans-serif;font-weight:700;font-size:clamp(28px,6vw,36px);line-height:1.55;letter-spacing:-.01em}
+html[lang="fa"] .auth-title{font-family:Vazirmatn,Inter,sans-serif;font-weight:700;font-size:clamp(28px,6vw,36px);line-height:1.55;letter-spacing:0;unicode-bidi:plaintext}
 .auth-tag{margin:0 0 24px;font-size:16px;line-height:1.85;color:var(--muted);text-wrap:balance;animation:rise .8s .12s var(--ease) backwards}
 .sub{font-size:13.5px;margin:0 0 14px}
 #loginHome{animation:rise .8s .18s var(--ease) backwards}
@@ -617,8 +625,8 @@ html[lang="fa"] .auth-title{font-family:Vazirmatn,Inter,sans-serif;font-weight:7
 .main:not(:has(.welcome)) .homebg{opacity:0}
 
 /* ---- serif display type ---- */
-.welcome h1{font-family:var(--display);font-weight:400;font-size:clamp(32px,5.4vw,46px);line-height:1.2;letter-spacing:-.025em}
-html[lang="fa"] .welcome h1{font-family:Vazirmatn,Inter,sans-serif;font-weight:700;font-size:clamp(28px,4.6vw,38px);line-height:1.55;letter-spacing:-.01em}
+.welcome h1{font-family:var(--display);font-weight:400;font-size:clamp(32px,5.4vw,46px);line-height:1.2;letter-spacing:-.02em}
+html[lang="fa"] .welcome h1{font-family:Vazirmatn,Inter,sans-serif;font-weight:700;font-size:clamp(22px,4.2vw,34px);line-height:1.7;letter-spacing:0;word-spacing:0;unicode-bidi:plaintext}
 .unipanel h2,.av-sheet h2,.soon-panel h2,.settings-head h2{font-family:var(--display);font-weight:500;letter-spacing:-.015em}
 html[lang="fa"] .unipanel h2,html[lang="fa"] .av-sheet h2,html[lang="fa"] .soon-panel h2,html[lang="fa"] .settings-head h2{font-family:Vazirmatn,Inter,sans-serif;font-weight:700}
 .welcome p{font-size:16px}
@@ -667,6 +675,11 @@ html[lang="fa"] .unipanel h2,html[lang="fa"] .av-sheet h2,html[lang="fa"] .soon-
 }
 
 /* ---------- 12. Responsive ---------- */
+@media(max-width:900px){
+  .suggest{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .welcomein{max-width:520px;padding-inline:8px}
+}
+
 @media(max-width:750px){
   :root{--side-w:min(310px,86vw)}
   .side,.app.side-collapsed .side{position:fixed;right:0;top:0;bottom:0;width:var(--side-w);padding:calc(56px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
@@ -691,9 +704,19 @@ html[lang="fa"] .unipanel h2,html[lang="fa"] .av-sheet h2,html[lang="fa"] .soon-
   .token-banner{flex-direction:column;align-items:stretch;text-align:center}
   .token-banner-btn{width:100%}
   .suggest{grid-template-columns:1fr;gap:8px}
+  .welcome{min-height:calc(100dvh - var(--composer-h) - 120px);padding-inline:4px}
+  .welcomein{max-width:100%;margin-top:-12px}
+  .welcome h1{font-size:clamp(20px,5.6vw,28px);line-height:1.65;padding-inline:4px}
+  html[lang="fa"] .welcome h1{font-size:clamp(18px,5.2vw,26px);line-height:1.75;letter-spacing:0}
+  .logo-welcome{width:clamp(120px,40vw,160px);margin-bottom:18px}
+  .suggest{margin-top:22px}
+  .app,.main{overflow-x:hidden;min-width:0}
+  body{overflow-x:hidden}
+
   .authcard{padding:32px 20px 22px}
-  .support-modal,.av-modal{align-items:flex-end;padding:0}
+  .support-modal,.av-modal,.premium-modal{align-items:flex-end;padding:0}
   .support-panel{width:100%;height:min(88%,660px);border-radius:var(--r-xl) var(--r-xl) 0 0;border-bottom:0;transform:translateY(100%)}
+  .premium-modal .cd-panel{width:100%;border-radius:var(--r-xl) var(--r-xl) 0 0;padding-bottom:calc(22px + env(safe-area-inset-bottom))}
   .av-sheet{width:100%;border-radius:var(--r-xl) var(--r-xl) 0 0;border-bottom:0;padding-bottom:calc(24px + env(safe-area-inset-bottom));transform:translateY(100%)}
   .settings-backdrop{padding:8px;align-items:end}
   .settings-panel{padding:18px;border-radius:var(--r-xl) var(--r-xl) 12px 12px;max-height:94dvh}
@@ -830,7 +853,7 @@ html[dir="rtl"] .mem-slider::before{left:auto;right:2px}
  </main>
 </div>
 
-<div class="topctl"><button id="usageIcon" class="iconbtn usage-icon hidden" type="button" aria-haspopup="dialog" aria-label="مصرف امروز" title="مصرف امروز" data-i18n-aria="usage.label"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.5 16.5a7.5 7.5 0 1 1 15 0"/><path d="M12 16.5l3.2-4.2"/></svg><i id="usageDot" class="usage-dot"></i></button><button id="supportIcon" class="iconbtn" type="button" aria-haspopup="dialog" aria-label="ارتباط با ما" title="ارتباط با ما" data-i18n-aria="support.icon" data-i18n-title="support.icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-4.2 3.6a.5.5 0 0 1-.8-.4V16h-.5A2.5 2.5 0 0 1 4 13.5z"/><path d="M8.5 8.5h7M8.5 11.5h4.5"/></svg></button><button id="themeToggle" class="iconbtn" type="button" aria-label="تغییر تم"><svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg><svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></svg><span id="themeLabel" class="themelabel">Dark</span></button><button id="settingsOpen" class="iconbtn" type="button" aria-label="تنظیمات" title="تنظیمات" data-settings-open><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></button><button id="langToggle" class="iconbtn" type="button" aria-label="Switch language to English" title="Switch language to English"><span class="langlabel">English</span></button></div>
+<div class="topctl"><button id="usageIcon" class="iconbtn usage-icon hidden" type="button" aria-haspopup="dialog" aria-label="مصرف امروز" title="مصرف امروز" data-i18n-aria="usage.label"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.5 16.5a7.5 7.5 0 1 1 15 0"/><path d="M12 16.5l3.2-4.2"/></svg><i id="usageDot" class="usage-dot"></i></button><button id="supportIcon" class="iconbtn" type="button" aria-haspopup="dialog" aria-label="ارتباط با ما" title="ارتباط با ما" data-i18n-aria="support.icon" data-i18n-title="support.icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-4.2 3.6a.5.5 0 0 1-.8-.4V16h-.5A2.5 2.5 0 0 1 4 13.5z"/><path d="M8.5 8.5h7M8.5 11.5h4.5"/></svg><i id="supportUnread" class="support-unread hidden" aria-hidden="true"></i></button><button id="themeToggle" class="iconbtn" type="button" aria-label="تغییر تم"><svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg><svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></svg><span id="themeLabel" class="themelabel">Dark</span></button><button id="settingsOpen" class="iconbtn" type="button" aria-label="تنظیمات" title="تنظیمات" data-settings-open><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></button><button id="langToggle" class="iconbtn" type="button" aria-label="Switch language to English" title="Switch language to English"><span class="langlabel">English</span></button></div>
 
 <div id="supportModal" class="support-modal" aria-hidden="true">
  <div class="support-panel" role="dialog" aria-modal="true" aria-labelledby="supportHeading">
@@ -878,7 +901,8 @@ async function send(){const input=$('input'),text=input.value.trim();if(!text||$
 function resize(){let x=$('input');x.style.height='auto';x.style.height=Math.min(x.scrollHeight,170)+'px';x.style.overflowY=x.scrollHeight>170?'auto':'hidden'}
 function authErr(e,verify){const st=e&&e.status,code=String((e&&e.code)||'');if(st===429||/rate_limit|too_many/i.test(code))return T('auth.err.rate');if(!st||/retryable|fetch/i.test((e&&e.name)||''))return T('auth.err.network');return verify?T('auth.err.codeInvalid'):T('auth.err.generic')}
 $('sendOtp').onclick=async()=>{const email=$('email').value.trim().toLowerCase();if(!email)return msg(T('auth.err.emailEmpty'),true);if(!PHONE.isEmail(email))return msg(T('auth.err.emailInvalid'),true);const raw=$('phone').value.trim();let e164=null;if(raw||!window.__phoneOptional(email)){if(!raw)return msg(T('auth.err.phoneEmpty'),true);const ph=PHONE.normalize($('phoneCountry').value,raw);if(!ph.ok)return msg(T('auth.err.phoneInvalid'),true);e164=ph.e164}const wait=Math.ceil((otpCooldownUntil-Date.now())/1000);if(wait>0)return msg(T('auth.wait',{n:wait}),true);$('sendOtp').disabled=true;msg(T('auth.sending'));const opts={shouldCreateUser:true};if(e164)opts.data={phone:e164,language:I18N.lang};let error=null;try{({error}=await sb.auth.signInWithOtp({email,options:opts}))}catch(e){error=e||{}}$('sendOtp').disabled=false;if(error){console.error('sendOtp',error);return msg(authErr(error,false),true)}otpCooldownUntil=Date.now()+60000;window.__pendingPhone=e164;emailForOtp=email;$('emailStep').classList.add('hidden');$('otpStep').classList.remove('hidden');$('sub').setAttribute('data-i18n','auth.sub.otp');$('sub').textContent=T('auth.sub.otp');msg(T('auth.sent'))}
-$('verifyOtp').onclick=async()=>{const token=$('otp').value.trim();if(!/^\d{6}$/.test(token))return msg(T('auth.err.code6'),true);$('verifyOtp').disabled=true;let data=null,error=null;try{({data,error}=await sb.auth.verifyOtp({email:emailForOtp,token,type:'email'}))}catch(e){error=e||{}}$('verifyOtp').disabled=false;if(error){console.error('verifyOtp',error);return msg(authErr(error,true),true)}user=data.user;await init()}
+async function notifyLogin(session){try{const tok=session&&session.access_token;if(!tok)return;const url=(typeof apiUrl==='function'&&apiUrl('/api/auth/login-notify'))||'';if(!url)return;await fetch(url,{method:'POST',headers:{'Authorization':'Bearer '+tok}})}catch(e){console.warn('login notify failed')}}
+$('verifyOtp').onclick=async()=>{const token=$('otp').value.trim();if(!/^\d{6}$/.test(token))return msg(T('auth.err.code6'),true);$('verifyOtp').disabled=true;let data=null,error=null;try{({data,error}=await sb.auth.verifyOtp({email:emailForOtp,token,type:'email'}))}catch(e){error=e||{}}$('verifyOtp').disabled=false;if(error){console.error('verifyOtp',error);return msg(authErr(error,true),true)}notifyLogin(data&&data.session);user=data.user;await init()}
 $('backOtp').onclick=()=>{$('otpStep').classList.add('hidden');$('emailStep').classList.remove('hidden');$('sub').setAttribute('data-i18n','auth.sub.email');$('sub').textContent=T('auth.sub.email');msg('')}
 $('newChat').onclick=async()=>{chatSeq++;currentChat=null;welcome();$('side').classList.remove('open')}
 $('logout').onclick=async()=>{await sb.auth.signOut();location.reload()}

@@ -59,3 +59,96 @@
   });
   render();
 })();
+
+/* Quota-exceeded Premium modal. Opens only when POST /api/chat returns 429 + quota_exceeded.
+   Placeholder upgrade does not charge or grant access. */
+(function () {
+  'use strict';
+  var mdl = null, last = null, note = null, origFetch = window.fetch;
+
+  function tr(k) { return (typeof I18N !== 'undefined' && I18N.t) ? I18N.t(k) : k; }
+  function applyI18n() {
+    if (!mdl) return;
+    var title = mdl.querySelector('#premiumTitle');
+    var body = mdl.querySelector('#premiumBody');
+    var up = mdl.querySelector('#premiumUpgrade');
+    var cl = mdl.querySelector('#premiumClose');
+    if (title) title.textContent = tr('premium.title');
+    if (body) body.textContent = tr('premium.body');
+    if (up) up.textContent = tr('premium.upgrade');
+    if (cl) cl.textContent = tr('common.close');
+    if (note && note.dataset.on) note.textContent = tr('premium.placeholder');
+  }
+  function build() {
+    mdl = document.createElement('div');
+    mdl.id = 'premiumModal';
+    mdl.className = 'cd-modal premium-modal';
+    mdl.setAttribute('aria-hidden', 'true');
+    mdl.innerHTML =
+      '<div class="cd-panel" role="dialog" aria-modal="true" aria-labelledby="premiumTitle" aria-describedby="premiumBody">' +
+        '<div class="cd-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.8 7.2 18.9l.9-5.4L4.2 8.7l5.4-.8z"/></svg></div>' +
+        '<h2 class="cd-title" id="premiumTitle"></h2>' +
+        '<p class="cd-sub" id="premiumBody"></p>' +
+        '<p class="premium-note" id="premiumNote" hidden></p>' +
+        '<div class="cd-actions">' +
+          '<button type="button" class="cd-btn cd-keep" id="premiumUpgrade"></button>' +
+          '<button type="button" class="cd-btn us-sec" id="premiumClose"></button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(mdl);
+    note = mdl.querySelector('#premiumNote');
+    applyI18n();
+    mdl.querySelector('#premiumUpgrade').addEventListener('click', function () {
+      if (!note) return;
+      note.hidden = false;
+      note.dataset.on = '1';
+      note.textContent = tr('premium.placeholder');
+    });
+    mdl.querySelector('#premiumClose').addEventListener('click', function () { close(true); });
+    mdl.addEventListener('mousedown', function (e) { if (e.target === mdl) close(true); });
+    mdl.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { e.stopPropagation(); e.preventDefault(); close(true); return; }
+      if (e.key === 'Tab') {
+        var f = [].filter.call(mdl.querySelectorAll('button:not([disabled])'), function (n) { return n.offsetParent !== null; });
+        if (!f.length) { e.preventDefault(); return; }
+        var a = f[0], z = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); }
+        else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
+      }
+    });
+  }
+  function open() {
+    if (!mdl) build();
+    applyI18n();
+    if (note) { note.hidden = true; note.dataset.on = ''; note.textContent = ''; }
+    if (mdl.classList.contains('open')) return;
+    last = document.activeElement;
+    mdl.classList.add('open');
+    mdl.setAttribute('aria-hidden', 'false');
+    setTimeout(function () {
+      try { mdl.querySelector('#premiumUpgrade').focus({ preventScroll: true }); } catch (e) {}
+    }, 80);
+  }
+  function close(returnFocus) {
+    if (!mdl || !mdl.classList.contains('open')) return;
+    mdl.classList.remove('open');
+    mdl.setAttribute('aria-hidden', 'true');
+    if (returnFocus && last && last.isConnected) try { last.focus({ preventScroll: true }); } catch (e) {}
+  }
+  window.fetch = function (input, init) {
+    return origFetch.apply(this, arguments).then(function (res) {
+      try {
+        var url = typeof input === 'string' ? input : (input && input.url) || '';
+        var method = (init && init.method) || (typeof Request !== 'undefined' && input instanceof Request && input.method) || 'GET';
+        if (res.status === 429 && /\/api\/chat(?:\?|$)/.test(String(url)) && String(method).toUpperCase() === 'POST') {
+          res.clone().json().then(function (d) {
+            if (d && d.error === 'quota_exceeded') open();
+          }).catch(function () {});
+        }
+      } catch (e) {}
+      return res;
+    });
+  };
+  document.addEventListener('langchange', applyI18n);
+  window.__openPremiumModal = open;
+})();
