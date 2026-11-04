@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1 'sha256-v2HyJVGfF+x9W2HgHT55pnjiYB8+f1JGue0+Ez5dSdw=' 'sha256-AJ2lOkCc0tJi/Ud+Z+XT4eZVoXF3rATJDhLEG9fjs5E=' 'sha256-2CJRjQxk/goB3B6plEUbc/MQH9xA8Pqk+HUU7Pm9048=' 'sha256-hOqmFj8aMyfQ24LzgyjXRl9GTiiNK9ZJUmJ05/Klszc=' ; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.workers.dev; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1 'sha256-v2HyJVGfF+x9W2HgHT55pnjiYB8+f1JGue0+Ez5dSdw=' 'sha256-hurhpZoR+VyozaM9mCJsuEIrcZPK0LPwhGZxZ76Ydxg=' 'sha256-2CJRjQxk/goB3B6plEUbc/MQH9xA8Pqk+HUU7Pm9048=' 'sha256-LKzkcNHIsRIJpoiUkInxpBNLv+/Z5e0kYzZoAcCKSEY=' ; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.workers.dev; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="theme-color" content="#0a0a0b">
@@ -418,7 +418,27 @@ html[lang="en"] #langToggle .langlabel::after{content:"فا"}
   -webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);
   transition:border-color var(--dur-2) var(--ease),box-shadow var(--dur-2) var(--ease)}
 .composer:focus-within{border-color:var(--composer-focus);box-shadow:var(--shadow),0 0 0 3px var(--ring)}
-.attachbtn{width:38px;height:38px;border-radius:50%;color:var(--muted)}
+.attachbtn{width:38px;height:38px;border-radius:50%;color:var(--muted);flex:none}
+.composer-inner{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.attach-previews{display:flex;flex-wrap:wrap;gap:6px;padding:0 4px}
+.attach-preview{position:relative;width:56px;height:56px;border-radius:10px;overflow:hidden;border:1px solid var(--line-2);background:var(--surface-2)}
+.attach-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.attach-preview .rm{position:absolute;top:2px;left:2px;width:20px;height:20px;border:0;border-radius:50%;background:rgba(0,0,0,.7);color:#fff;font-size:12px;cursor:pointer;display:grid;place-items:center;line-height:1}
+.attach-preview .file-label{display:grid;place-items:center;height:100%;font-size:10px;color:var(--text-2);padding:4px;text-align:center;word-break:break-all}
+.model-picker{position:relative;flex:none}
+.model-btn{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 6px;border:1px solid var(--line);border-radius:20px;background:var(--surface-2);color:var(--text-2);font-size:12px;cursor:pointer;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;touch-action:manipulation}
+.model-btn:hover{border-color:var(--line-2);color:var(--text)}
+.model-btn .mi{width:18px;height:18px;border-radius:50%;background:var(--accent-soft);display:grid;place-items:center;font-size:10px;flex:none}
+.model-menu{position:absolute;bottom:calc(100% + 8px);right:0;min-width:220px;max-width:280px;background:var(--surface);border:1px solid var(--line-2);border-radius:14px;box-shadow:var(--shadow-pop);padding:6px;z-index:20;display:none}
+.model-menu.open{display:block}
+.model-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;color:var(--text);font-size:13px;border:0;background:transparent;width:100%;text-align:right}
+.model-item:hover,.model-item.active{background:var(--hover-bg)}
+.model-item .mi{width:28px;height:28px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;font-size:12px;flex:none}
+.model-item .meta{flex:1;min-width:0}
+.model-item .name{font-weight:600;display:block}
+.model-item .desc{font-size:11px;color:var(--muted);display:block}
+.composer.dragover{border-color:var(--accent);box-shadow:var(--shadow),0 0 0 3px var(--ring)}
+.msg .bubble img.msg-img{max-width:min(240px,80vw);border-radius:12px;margin-top:6px;display:block}
 textarea{flex:1;min-width:0;min-height:40px;max-height:170px;margin:0;padding:8px 8px;border:0;outline:0;background:transparent;color:var(--text);resize:none;
   font-size:16px;line-height:24px;overflow-y:hidden;-webkit-appearance:none;appearance:none;border-radius:0;touch-action:manipulation}
 textarea::placeholder{color:var(--muted);opacity:1}
@@ -812,7 +832,7 @@ html[dir="rtl"] .mem-slider::before{left:auto;right:2px}
   </div>
   <div class="authfoot">
    <div class="powered">Powered by ChatGPT</div>
-   <div class="credit">Developed by <a href="https://t.me/xcinoo" target="_blank" rel="noopener noreferrer">Sina Ganji</a></div>
+   <div class="credit">Developed by <a href="https://xcinooo.netlify.app" target="_blank" rel="noopener noreferrer">Sina Ganji</a></div>
   </div>
  </div>
 
@@ -848,7 +868,19 @@ html[dir="rtl"] .mem-slider::before{left:auto;right:2px}
   <section id="chat" class="chat"><div id="messages" class="messages"></div></section>
   <div class="composerwrap">
    <div id="tokenBanner" class="token-banner hidden" role="alert"><div class="token-banner-text" data-i18n="usage.banner">سهمیه‌ی امروز شما تمام شده است. برای شارژ حساب، مستقیم به پشتیبانی پیام بدهید.</div><button id="tokenSupportBtn" class="token-banner-btn" type="button" data-i18n="usage.toSupport">پیام به پشتیبانی</button></div>
-   <div class="composer"><button id="attachBtn" class="iconbtn attachbtn" type="button" aria-haspopup="dialog" aria-label="ارسال عکس (بزودی)" title="ارسال عکس (بزودی)" data-i18n-aria="chat.attach" data-i18n-title="chat.attach"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m4 17 5-4.5 3.5 3L15 13.5l5 4.5"/></svg></button><textarea id="input" rows="1" placeholder="چیزی بپرس..." aria-label="پیام شما" data-i18n-placeholder="chat.input.placeholder" data-i18n-aria="chat.input.aria" enterkeyhint="send" autocomplete="off"></textarea><button id="send" class="send" type="button" aria-label="ارسال" data-i18n-aria="chat.send"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></svg></button></div>
+   <div class="composer" id="composer">
+    <button id="attachBtn" class="iconbtn attachbtn" type="button" aria-label="افزودن عکس یا فایل" title="افزودن عکس یا فایل"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+    <input type="file" id="fileInput" accept="image/jpeg,image/png,image/gif,image/webp,image/*" multiple hidden>
+    <div class="composer-inner">
+     <div id="attachPreviews" class="attach-previews"></div>
+     <textarea id="input" rows="1" placeholder="چیزی بپرس..." aria-label="پیام شما" data-i18n-placeholder="chat.input.placeholder" data-i18n-aria="chat.input.aria" enterkeyhint="send" autocomplete="off"></textarea>
+    </div>
+    <div class="model-picker">
+     <button type="button" id="modelBtn" class="model-btn" aria-haspopup="listbox" aria-expanded="false"><span class="mi" id="modelIcon">✦</span><span id="modelName">GPT-OSS 120B</span></button>
+     <div id="modelMenu" class="model-menu" role="listbox"></div>
+    </div>
+    <button id="send" class="send" type="button" aria-label="ارسال" data-i18n-aria="chat.send"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></svg></button>
+   </div>
    <div class="hint" data-i18n="chat.hint">ممکن است اشتباه کند. اطلاعات مهم را بررسی کنید.</div>
   </div>
  </main>
@@ -887,18 +919,72 @@ html[dir="rtl"] .mem-slider::before{left:auto;right:2px}
 const {createClient}=supabase;
 const sb=createClient(APP_CONFIG.SUPABASE_URL,APP_CONFIG.SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const $=id=>document.getElementById(id);const T=(k,p)=>I18N.t(k,p);let user=null,currentChat=null,emailForOtp='',chatSeq=0,otpCooldownUntil=0;window.__pendingPhone=null;
+/* ---- Model selector & attachments (ChatGPT-like) ---- */
+const MODELS=[
+  {id:'openai/gpt-oss-120b',name:'GPT-OSS 120B',desc:'قدرتمند · متن',icon:'✦',vision:false},
+  {id:'openai/gpt-oss-20b',name:'GPT-OSS 20B',desc:'سریع · متن',icon:'⚡',vision:false},
+  {id:'qwen/qwen3.8-27b',name:'Qwen3.8 27B',desc:'چندوجهی · تصویر',icon:'👁',vision:true},
+  {id:'meta-llama/llama-4-scout-17b-16e-instruct',name:'Llama 4 Scout',desc:'بینایی · تصویر',icon:'🦙',vision:true},
+  {id:'openrouter/free',name:'OpenRouter Free',desc:'پشتیبان رایگان',icon:'◇',vision:false}
+];
+let selectedModel=localStorage.getItem('ua_model')||MODELS[0].id;
+let pendingFiles=[]; // {id, file, dataUrl, isImage}
+function getModel(id){return MODELS.find(m=>m.id===id)||MODELS[0]}
+function renderModelUI(){
+  const m=getModel(selectedModel);
+  const icon=$('modelIcon'),name=$('modelName'),menu=$('modelMenu');
+  if(icon)icon.textContent=m.icon;
+  if(name)name.textContent=m.name;
+  if(!menu)return;
+  menu.innerHTML='';
+  MODELS.forEach(mod=>{
+    const btn=document.createElement('button');
+    btn.type='button';btn.className='model-item'+(mod.id===selectedModel?' active':'');
+    btn.setAttribute('role','option');btn.setAttribute('aria-selected',mod.id===selectedModel?'true':'false');
+    btn.innerHTML='<span class="mi">'+mod.icon+'</span><span class="meta"><span class="name">'+mod.name+'</span><span class="desc">'+mod.desc+'</span></span>';
+    btn.onclick=()=>{selectedModel=mod.id;localStorage.setItem('ua_model',mod.id);renderModelUI();menu.classList.remove('open');$('modelBtn').setAttribute('aria-expanded','false')};
+    menu.appendChild(btn);
+  });
+}
+function renderPreviews(){
+  const box=$('attachPreviews');if(!box)return;
+  box.innerHTML='';
+  pendingFiles.forEach(f=>{
+    const d=document.createElement('div');d.className='attach-preview';
+    if(f.isImage){const img=document.createElement('img');img.src=f.dataUrl;img.alt='';d.appendChild(img)}
+    else{const sp=document.createElement('span');sp.className='file-label';sp.textContent=(f.file.name||'file').slice(0,18);d.appendChild(sp)}
+    const rm=document.createElement('button');rm.type='button';rm.className='rm';rm.setAttribute('aria-label','حذف');rm.textContent='×';
+    rm.onclick=()=>{pendingFiles=pendingFiles.filter(x=>x.id!==f.id);renderPreviews()};
+    d.appendChild(rm);box.appendChild(d);
+  });
+}
+function fileToDataUrl(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}
+async function addFiles(fileList){
+  const arr=Array.from(fileList||[]);
+  for(const file of arr){
+    if(pendingFiles.length>=3)break;
+    const isImage=/^image\/(jpeg|jpg|png|gif|webp)$/i.test(file.type);
+    if(!isImage&&!file.type.startsWith('image/'))continue; // only images for vision
+    if(file.size>4*1024*1024){alert('حجم هر فایل حداکثر ۴ مگابایت');continue}
+    try{
+      const dataUrl=await fileToDataUrl(file);
+      pendingFiles.push({id:Math.random().toString(36).slice(2),file,dataUrl,isImage:true});
+    }catch(e){console.warn(e)}
+  }
+  renderPreviews();
+}
 function msg(t,err=false){$('authmsg').textContent=t||'';$('authmsg').className='authmsg'+(err?' autherr':'')}
 function showAuth(){ $('loader').classList.add('hidden');$('app').classList.add('hidden');$('auth').classList.remove('hidden')}
 function showApp(){ $('loader').classList.add('hidden');$('auth').classList.add('hidden');$('app').classList.remove('hidden');$('useremail').textContent=user.email||'';$('userdot').textContent=(user.email||'U')[0].toUpperCase()}
 function welcome(){ $('messages').innerHTML='<div class="welcome"><div class="welcomein"><img class="logo logo-welcome" src="data:image/png;base64,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" alt="لوگوی سایت" data-i18n-alt="logo.alt"><h1 data-i18n="chat.welcome.title">سلام، امروز چطور می‌تونم کمکت کنم؟</h1><p data-i18n="chat.welcome.sub"></p><div class="suggest" role="list"><button type="button" data-prompt="کد پایتون بنویس" role="listitem"><span class="si" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 6h8M8 12h8M8 18h5"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg></span><span class="st"><b>کد پایتون بنویس</b><span>کمک برای نوشتن یا اصلاح کد</span></span></button><button type="button" data-prompt="یک موضوع را آموزش بده" role="listitem"><span class="si" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span><span class="st"><b>یک موضوع را آموزش بده</b><span>یادگیری گام‌به‌گام</span></span></button><button type="button" data-prompt="این خطا را بررسی کن" role="listitem"><span class="si" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg></span><span class="st"><b>این خطا را بررسی کن</b><span>دیباگ و رفع مشکل</span></span></button></div></div></div>';I18N.apply($('messages'));document.querySelectorAll('.suggest button').forEach(btn=>{btn.onclick=()=>{const p=btn.getAttribute('data-prompt');const inp=$('input');if(inp){inp.value=p;inp.dispatchEvent(new Event('input'));inp.focus();}}});}
 
-function add(role,text,animate,messageId){const box=$('messages');box.querySelector('.welcome')?.remove();const el=document.createElement('div');el.className='msg '+role+(animate?' enter':'');if(messageId)el.setAttribute('data-message-id',messageId);if(currentChat)el.setAttribute('data-chat-id',currentChat);el.innerHTML='<div class="avatar" aria-hidden="true">'+(role==='user'?T('chat.you'):'✦')+'</div><div class="bubble"></div>';const b=el.querySelector('.bubble');b.setAttribute('dir','auto');b.textContent=text;box.appendChild(el);$('chat').scrollTop=$('chat').scrollHeight;if(role==='ai'&&window.__UA&&__UA.setMessageMeta)__UA.setMessageMeta(el,messageId||'',currentChat||'');return el}
+function add(role,text,animate,messageId,images){const box=$('messages');box.querySelector('.welcome')?.remove();const el=document.createElement('div');el.className='msg '+role+(animate?' enter':'');if(messageId)el.setAttribute('data-message-id',messageId);if(currentChat)el.setAttribute('data-chat-id',currentChat);el.innerHTML='<div class="avatar" aria-hidden="true">'+(role==='user'?T('chat.you'):'✦')+'</div><div class="bubble"></div>';const b=el.querySelector('.bubble');b.setAttribute('dir','auto');if(text)b.textContent=text;if(images&&images.length){images.forEach(src=>{const img=document.createElement('img');img.className='msg-img';img.src=src;img.alt='';b.appendChild(img)})}box.appendChild(el);$('chat').scrollTop=$('chat').scrollHeight;if(role==='ai'&&window.__UA&&__UA.setMessageMeta)__UA.setMessageMeta(el,messageId||'',currentChat||'');return el}
 function chatTitle(c){const t=(c&&c.title)||'';return(!t||t==='گفتگوی جدید')?T('chat.defaultTitle'):t}
 function renderChats(){$('chats').innerHTML='';(window.__chatsCache||[]).forEach(c=>{let x=document.createElement('div');x.className='chatitem';x.tabIndex=0;x.setAttribute('role','button');x.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openChat(c.id)}};x.textContent=chatTitle(c);x.onclick=()=>openChat(c.id);$('chats').appendChild(x)})}
 async function loadChats(){const {data,error}=await sb.from('chats').select('id,title').order('created_at',{ascending:false});if(error)console.error('loadChats',error);else window.__chatsCache=data||[];renderChats()}
 async function openChat(id){const my=++chatSeq;currentChat=id;welcome();const {data,error}=await sb.from('messages').select('id,role,content').eq('chat_id',id).order('created_at');if(my!==chatSeq)return;if(error)console.error('openChat',error);(data||[]).forEach(m=>add(m.role,m.content,false,m.id));$('side').classList.remove('open')}
 async function createChat(title){const {data,error}=await sb.from('chats').insert({user_id:user.id,title:title.slice(0,50)}).select().single();if(error)throw error;currentChat=data.id;await loadChats();return data.id}
-async function send(){const input=$('input'),text=input.value.trim();if(!text||$('send').disabled)return;input.value='';resize();$('send').disabled=true;let chatId=null;const requestId=(crypto.randomUUID?crypto.randomUUID():('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16)})));try{if(!currentChat)await createChat(text);chatId=currentChat;add('user',text,true);let typing=document.createElement('div');typing.className='msg ai enter';typing.id='typing';typing.innerHTML='<div class="avatar" aria-hidden="true">✦</div><div class="bubble typing-bubble" role="status" aria-label="'+T('chat.thinking')+'"><span></span><span></span><span></span></div>';$('messages').appendChild(typing);$('chat').scrollTop=$('chat').scrollHeight;const session=(await sb.auth.getSession()).data.session;const token=session&&session.access_token;if(!token)throw Error('no session');const url=(typeof apiUrl==='function'&&apiUrl('/api/chat'))||'';if(!url)throw Error('API_BASE_URL not configured');const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),90000);let r;try{r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'Idempotency-Key':requestId},signal:ctl.signal,body:JSON.stringify({message:text,chat_id:chatId,request_id:requestId})})}finally{clearTimeout(tm)}const d=await r.json().catch(()=>({}));if(r.status===429){const msg=(d&&d.response)||T('chat.err.quota')||T('chat.err.ai');$('typing')?.remove();if(currentChat===chatId)add('ai',msg,true);if(window.USAGE&&USAGE.refresh)USAGE.refresh();return}if(r.status===409){const msg=(d&&d.response)||T('chat.err.busy')||T('chat.err.ai');$('typing')?.remove();if(currentChat===chatId)add('ai',msg,true);return}if(r.status===401){$('typing')?.remove();add('ai',T('chat.err.auth')||T('chat.err.ai'),true);return}if(!r.ok){const msg=(d&&d.response)||T('chat.err.ai');throw Error(msg)}const answer=typeof d.response==='string'?d.response.trim():'';if(!answer)throw Error('AI endpoint returned no text');$('typing')?.remove();const mid=(d&&d.message_id)||null;if(currentChat===chatId)add('ai',answer,true,mid);if(window.USAGE&&USAGE.refresh)USAGE.refresh()}catch(e){$('typing')?.remove();add('ai',e&&e.name==='AbortError'?T('chat.err.timeout'):(e&&e.message&&e.message.length<120?e.message:T('chat.err.ai')),true);console.error(e)}finally{$('send').disabled=false;$('input').focus()}}
+async function send(){const input=$('input'),text=input.value.trim();const imgs=pendingFiles.map(f=>f.dataUrl);if((!text&&!imgs.length)||$('send').disabled)return;input.value='';resize();const sentImgs=imgs.slice();pendingFiles=[];renderPreviews();$('send').disabled=true;let chatId=null;const requestId=(crypto.randomUUID?crypto.randomUUID():('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16)})));try{if(!currentChat)await createChat(text||'تصویر');chatId=currentChat;add('user',text,true,null,sentImgs);let typing=document.createElement('div');typing.className='msg ai enter';typing.id='typing';typing.innerHTML='<div class="avatar" aria-hidden="true">✦</div><div class="bubble typing-bubble" role="status" aria-label="'+T('chat.thinking')+'"><span></span><span></span><span></span></div>';$('messages').appendChild(typing);$('chat').scrollTop=$('chat').scrollHeight;const session=(await sb.auth.getSession()).data.session;const token=session&&session.access_token;if(!token)throw Error('no session');const url=(typeof apiUrl==='function'&&apiUrl('/api/chat'))||'';if(!url)throw Error('API_BASE_URL not configured');const body={message:text||'',chat_id:chatId,request_id:requestId,model:selectedModel};if(sentImgs.length)body.images=sentImgs;const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),120000);let r;try{r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'Idempotency-Key':requestId},signal:ctl.signal,body:JSON.stringify(body)})}finally{clearTimeout(tm)}const d=await r.json().catch(()=>({}));if(r.status===429){const msg=(d&&d.response)||T('chat.err.quota')||T('chat.err.ai');$('typing')?.remove();if(currentChat===chatId)add('ai',msg,true);if(window.USAGE&&USAGE.refresh)USAGE.refresh();return}if(r.status===409){const msg=(d&&d.response)||T('chat.err.busy')||T('chat.err.ai');$('typing')?.remove();if(currentChat===chatId)add('ai',msg,true);return}if(r.status===401){$('typing')?.remove();add('ai',T('chat.err.auth')||T('chat.err.ai'),true);return}if(!r.ok){const msg=(d&&d.response)||T('chat.err.ai');throw Error(msg)}const answer=typeof d.response==='string'?d.response.trim():'';if(!answer)throw Error('AI endpoint returned no text');$('typing')?.remove();const mid=(d&&d.message_id)||null;if(currentChat===chatId)add('ai',answer,true,mid);if(window.USAGE&&USAGE.refresh)USAGE.refresh()}catch(e){$('typing')?.remove();add('ai',e&&e.name==='AbortError'?T('chat.err.timeout'):(e&&e.message&&e.message.length<120?e.message:T('chat.err.ai')),true);console.error(e)}finally{$('send').disabled=false;$('input').focus()}}
 function resize(){let x=$('input');x.style.height='auto';x.style.height=Math.min(x.scrollHeight,170)+'px';x.style.overflowY=x.scrollHeight>170?'auto':'hidden'}
 function authErr(e,verify){const st=e&&e.status,code=String((e&&e.code)||'');if(st===429||/rate_limit|too_many/i.test(code))return T('auth.err.rate');if(!st||/retryable|fetch/i.test((e&&e.name)||''))return T('auth.err.network');return verify?T('auth.err.codeInvalid'):T('auth.err.generic')}
 $('sendOtp').onclick=async()=>{const email=$('email').value.trim().toLowerCase();if(!email)return msg(T('auth.err.emailEmpty'),true);if(!PHONE.isEmail(email))return msg(T('auth.err.emailInvalid'),true);const raw=$('phone').value.trim();let e164=null;if(raw||!window.__phoneOptional(email)){if(!raw)return msg(T('auth.err.phoneEmpty'),true);const ph=PHONE.normalize($('phoneCountry').value,raw);if(!ph.ok)return msg(T('auth.err.phoneInvalid'),true);e164=ph.e164}const wait=Math.ceil((otpCooldownUntil-Date.now())/1000);if(wait>0)return msg(T('auth.wait',{n:wait}),true);$('sendOtp').disabled=true;msg(T('auth.sending'));const opts={shouldCreateUser:true};if(e164)opts.data={phone:e164,language:I18N.lang};let error=null;try{({error}=await sb.auth.signInWithOtp({email,options:opts}))}catch(e){error=e||{}}$('sendOtp').disabled=false;if(error){console.error('sendOtp',error);return msg(authErr(error,false),true)}otpCooldownUntil=Date.now()+60000;window.__pendingPhone=e164;emailForOtp=email;$('emailStep').classList.add('hidden');$('otpStep').classList.remove('hidden');$('sub').setAttribute('data-i18n','auth.sub.otp');$('sub').textContent=T('auth.sub.otp');msg(T('auth.sent'))}
@@ -908,7 +994,19 @@ $('backOtp').onclick=()=>{$('otpStep').classList.add('hidden');$('emailStep').cl
 $('newChat').onclick=async()=>{chatSeq++;currentChat=null;welcome();$('side').classList.remove('open')}
 $('logout').onclick=async()=>{await sb.auth.signOut();location.reload()}
 $('menu').onclick=()=>$('side').classList.toggle('open');$('send').onclick=send;$('input').addEventListener('input',resize);$('input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}})
-async function init(){const {data}=await sb.auth.getSession();user=data.session?.user||user;if(!user)return showAuth();showApp();welcome();await loadChats()}
+/* Model picker + attachments */
+renderModelUI();
+$('modelBtn')?.addEventListener('click',e=>{e.stopPropagation();const m=$('modelMenu'),b=$('modelBtn');const open=!m.classList.contains('open');m.classList.toggle('open',open);b.setAttribute('aria-expanded',open?'true':'false')});
+document.addEventListener('click',()=>{$('modelMenu')?.classList.remove('open');$('modelBtn')?.setAttribute('aria-expanded','false')});
+$('attachBtn')?.addEventListener('click',()=>$('fileInput')?.click());
+$('fileInput')?.addEventListener('change',e=>{addFiles(e.target.files);e.target.value=''});
+const composer=$('composer');
+if(composer){
+  ['dragenter','dragover'].forEach(ev=>composer.addEventListener(ev,e=>{e.preventDefault();composer.classList.add('dragover')}));
+  ['dragleave','drop'].forEach(ev=>composer.addEventListener(ev,e=>{e.preventDefault();composer.classList.remove('dragover')}));
+  composer.addEventListener('drop',e=>{addFiles(e.dataTransfer?.files)});
+}
+async function init(){const {data}=await sb.auth.getSession();user=data.session?.user||user;if(!user)return showAuth();showApp();welcome();await loadChats();renderModelUI()}
 sb.auth.onAuthStateChange((_e,s)=>{if(s){user=s.user;if(document.getElementById('auth')&&!$('auth').classList.contains('hidden'))init()}});init();
 </script>
 
@@ -1198,22 +1296,11 @@ sb.auth.onAuthStateChange((_e,s)=>{if(s){user=s.user;if(document.getElementById(
  inp.addEventListener('input',resizeSupport);
  inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();sendSupport()}});
  sendBtn.addEventListener('click',sendSupport);
- /* ---------- ۶. ارسال عکس: فقط پنجره‌ی «بزودی» (هنوز هیچ آپلودی انجام نمی‌شود) ---------- */
- var soon=g('soonModal'),soonBtn=g('attachBtn'),soonClose=g('soonClose'),soonOk=g('soonOk'),soonLast=null;
- function openSoon(){
-  if(soon.classList.contains('open'))return;
-  soonLast=document.activeElement;
-  soon.classList.add('open');soon.setAttribute('aria-hidden','false');
-  setTimeout(function(){try{soonOk.focus({preventScroll:true})}catch(e){}},60);
- }
- function closeSoon(){
-  if(!soon.classList.contains('open'))return;
-  soon.classList.remove('open');soon.setAttribute('aria-hidden','true');
-  if(soonLast&&soonLast.focus)try{soonLast.focus({preventScroll:true})}catch(e){}
- }
- soonBtn.addEventListener('click',openSoon);
- soonClose.addEventListener('click',closeSoon);soonOk.addEventListener('click',closeSoon);
- soon.addEventListener('mousedown',function(e){if(e.target===soon)closeSoon()});
+ /* ---------- ۶. ارسال عکس: فعال شد (مدل‌های بینایی Groq) — پنجره‌ی بزودی دیگر استفاده نمی‌شود ---------- */
+ var soon=g('soonModal'),soonClose=g('soonClose'),soonOk=g('soonOk');
+ function closeSoon(){if(soon&&soon.classList.contains('open')){soon.classList.remove('open');soon.setAttribute('aria-hidden','true')}}
+ if(soonClose)soonClose.addEventListener('click',closeSoon);if(soonOk)soonOk.addEventListener('click',closeSoon);
+ if(soon)soon.addEventListener('mousedown',function(e){if(e.target===soon)closeSoon()});
  soon.addEventListener('keydown',function(e){
   if(e.key==='Escape'){e.stopPropagation();closeSoon();return}
   if(e.key==='Tab'){

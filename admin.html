@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.workers.dev; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#060607">
+<title>پنل مدیریت Unknown AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./admin.css">
+</head>
+<body>
+
+<div id="loader" class="screen">
+  <div class="spinner" role="status" aria-label="در حال بارگذاری"></div>
+</div>
+
+<section id="auth" class="screen hidden" aria-label="ورود مدیر">
+  <div class="auth-card">
+    <div class="auth-logo">UA</div>
+    <h1>پنل مدیریت</h1>
+    <p class="auth-sub">فقط حساب‌های مجاز مدیریتی می‌توانند وارد شوند.</p>
+    <div class="auth-tabs">
+      <button class="authtab active" id="tabPassword" type="button">رمز عبور</button>
+      <button class="authtab" id="tabOtp" type="button">کد یک‌بار‌مصرف</button>
+    </div>
+    <div id="passStep">
+      <label for="admUser" class="sr-only">نام کاربری یا ایمیل مدیر</label>
+      <input id="admUser" type="text" autocomplete="username" spellcheck="false" autocapitalize="none" class="dir-ltr" maxlength="320" placeholder="نام کاربری مدیر">
+      <label for="admPass" class="sr-only">رمز عبور</label>
+      <input id="admPass" type="password" autocomplete="current-password" class="dir-ltr" maxlength="256" placeholder="رمز عبور">
+      <button id="admPassIn" class="btn btn-primary">ورود</button>
+    </div>
+    <div id="emailStep" class="hidden">
+      <label for="admEmail" class="sr-only">ایمیل</label>
+      <input id="admEmail" type="email" autocomplete="email" inputmode="email" placeholder="ایمیل مدیر">
+      <button id="admSendOtp" class="btn btn-primary">ارسال کد ورود</button>
+    </div>
+    <div id="otpStep" class="hidden">
+      <label for="admOtp" class="sr-only">کد ۶ رقمی</label>
+      <input id="admOtp" class="otp" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code">
+      <button id="admVerifyOtp" class="btn btn-primary">تأیید و ورود</button>
+      <button id="admBack" class="btn btn-ghost">بازگشت</button>
+    </div>
+    <p id="authMsg" class="auth-msg" role="status"></p>
+    <button id="admSetupOpen" class="btn btn-link hidden" type="button">راه‌اندازی اولیه: ساخت اولین حساب مالک</button>
+  </div>
+</section>
+
+<section id="setup" class="screen hidden" aria-label="راه‌اندازی اولیه">
+  <div class="auth-card">
+    <div class="auth-logo">UA</div>
+    <h1>ساخت حساب مالک</h1>
+    <p class="auth-sub">این مرحله فقط یک‌بار اجرا می‌شود و بلافاصله پس از ساخت مالک بسته می‌شود. رمز عبور در سرویس احراز هویت Supabase با hashing امن ذخیره می‌شود و در این سرور نگه داشته نمی‌شود.</p>
+    <label for="suUser">نام کاربری (۳ تا ۳۲ نویسه: حروف کوچک انگلیسی، رقم، نقطه، خط تیره)</label>
+    <input id="suUser" type="text" autocomplete="username" spellcheck="false" autocapitalize="none" class="dir-ltr" maxlength="32" placeholder="sina_owner">
+    <label for="suPass">رمز عبور (دست‌کم ۱۲ نویسه، شامل حرف و رقم)</label>
+    <input id="suPass" type="password" autocomplete="new-password" class="dir-ltr" maxlength="256">
+    <label for="suPass2">تکرار رمز عبور</label>
+    <input id="suPass2" type="password" autocomplete="new-password" class="dir-ltr" maxlength="256">
+    <label for="suEmail">ایمیل تماس (اختیاری؛ برای هماهنگی پشتیبانی)</label>
+    <input id="suEmail" type="email" autocomplete="email" class="dir-ltr" maxlength="320" placeholder="you@example.com">
+    <label for="suCode">کد راه‌اندازی (همان مقدار ADMIN_BOOTSTRAP_CODE در Worker)</label>
+    <input id="suCode" type="password" autocomplete="off" spellcheck="false" class="dir-ltr" maxlength="128">
+    <button id="suRun" class="btn btn-primary">ساخت حساب مالک</button>
+    <p id="setupMsg" class="auth-msg" role="status"></p>
+    <button id="setupBack" class="btn btn-ghost" type="button">بازگشت به صفحه ورود</button>
+  </div>
+</section>
+
+<main id="app" class="hidden">
+  <aside id="side">
+    <div class="brand"><span class="brand-dot"></span><div><b>Unknown AI</b><small>پنل مدیریت</small></div></div>
+    <nav id="nav" aria-label="بخش‌ها">
+      <button class="navbtn active" data-view="dash">داشبورد</button>
+      <button class="navbtn" data-view="users">کاربران</button>
+      <button class="navbtn" data-view="support">پشتیبانی</button>
+      <button class="navbtn" data-view="reports">گزارش‌ها</button>
+      <button class="navbtn" data-view="audit">رویدادهای مدیریتی</button>
+      <button class="navbtn" data-view="admins" id="navAdmins">مدیران</button>
+    </nav>
+    <div class="side-foot">
+      <div id="meBadge" class="role-badge"></div>
+      <button id="admLogout" class="btn btn-ghost btn-sm">خروج</button>
+    </div>
+  </aside>
+
+  <div id="main">
+    <header id="top">
+      <h1 id="pageTitle">داشبورد</h1>
+      <div class="top-actions">
+        <span id="refreshMeta" class="muted small"></span>
+        <button id="refreshBtn" class="btn btn-ghost btn-sm" title="بازخوانی">⟳</button>
+        <button id="menuBtn" class="btn btn-ghost btn-sm only-mobile">☰</button>
+      </div>
+    </header>
+    <div id="content">
+      <section id="view-dash" class="view"></section>
+      <section id="view-users" class="view hidden"></section>
+      <section id="view-user" class="view hidden"></section>
+      <section id="view-support" class="view hidden"></section>
+      <section id="view-reports" class="view hidden"></section>
+      <section id="view-audit" class="view hidden"></section>
+      <section id="view-admins" class="view hidden"></section>
+    </div>
+  </div>
+</main>
+
+<div id="modalWrap" class="modal-wrap hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h3 id="modalTitle"></h3>
+    <div id="modalBody"></div>
+    <div class="modal-actions">
+      <button id="modalCancel" class="btn btn-ghost">انصراف</button>
+      <button id="modalOk" class="btn btn-danger">تأیید</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1"></script>
+<script src="./config.js"></script>
+<script src="./admin.js"></script>
+</body>
+</html>
