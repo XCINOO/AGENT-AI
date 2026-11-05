@@ -44,9 +44,12 @@
 
   /* ---------- profile API (security-definer RPC; identity comes from the session, never from the page) ---------- */
   var profilesOk = true;
+  /* sb is a top-level const of the page script: reachable by name; guard so a failed library load cannot throw here */
+  function curSb() { try { return sb; } catch (e) { return null; } }
   async function saveProfile(phone, lang) {
     try {
-      var r = await sb.rpc('upsert_my_profile', { p_phone: phone || null, p_language: lang || null });
+      var c = curSb(); if (!c) return null;
+      var r = await c.rpc('upsert_my_profile', { p_phone: phone || null, p_language: lang || null });
       if (r.error) throw r.error;
       return r.data || true;
     } catch (e) {
@@ -130,7 +133,8 @@
     handledFor = u.id; curUser = u;
     var prof = null;
     try {
-      var r = await sb.from('profiles').select('phone,phone_verified,language').eq('id', u.id).maybeSingle();
+      var c = curSb(); if (!c) throw new Error('supabase unavailable');
+      var r = await c.from('profiles').select('phone,phone_verified,language').eq('id', u.id).maybeSingle();
       if (r.error) throw r.error;
       prof = r.data;
     } catch (e) { profilesOk = false; console.warn('profiles unavailable (migration not applied?)', e && (e.message || e)); return; }
@@ -149,7 +153,7 @@
     if (!later) openModal();
   }
   try {
-    sb.auth.onAuthStateChange(function (ev, session) {
+    curSb().auth.onAuthStateChange(function (ev, session) {
       if (session && session.user) setTimeout(function () { onUser(session.user); }, 0);
       else { handledFor = null; curUser = null; closeModal(); }
     });

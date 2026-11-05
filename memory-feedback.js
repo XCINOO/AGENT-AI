@@ -9,11 +9,16 @@
     return (window.I18N && I18N.lang === 'en') ? en : fa;
   };
 
+  /* sb / currentChat are top-level let/const of the main page script: reachable by name, not via window.* */
+  function curSb() { try { return sb; } catch (e) { return null; } }
+  function curChat() { try { return currentChat; } catch (e) { return null; } }
+
   function getToken() {
-    return (window.sb && sb.auth && sb.auth.getSession)
-      ? sb.auth.getSession().then(function (r) {
+    var c = curSb();
+    return (c && c.auth && c.auth.getSession)
+      ? c.auth.getSession().then(function (r) {
           return r && r.data && r.data.session && r.data.session.access_token;
-        })
+        }).catch(function () { return null; })
       : Promise.resolve(null);
   }
 
@@ -180,16 +185,16 @@
   function submitFeedback(chatId, messageId, rating, comment, statusEl, upBtn, downBtn) {
     if (!chatId || !messageId) {
       if (statusEl) statusEl.textContent = text('شناسه پیام در دسترس نیست.', 'Message id unavailable.');
-      return;
+      return Promise.resolve(false);
     }
     if (statusEl) statusEl.textContent = text('در حال ارسال…', 'Submitting…');
-    api('/api/feedback', {
+    return api('/api/feedback', {
       method: 'POST',
       body: { chat_id: chatId, message_id: messageId, rating: rating, comment: comment || null }
     }).then(function (r) {
       if (!r.ok) {
         if (statusEl) statusEl.textContent = text('ثبت بازخورد ناموفق بود.', 'Feedback failed.');
-        return;
+        return false;
       }
       if (upBtn) {
         upBtn.classList.toggle('active-up', rating === 'up');
@@ -200,8 +205,10 @@
         downBtn.disabled = true;
       }
       if (statusEl) statusEl.textContent = text('متشکریم از بازخورد شما.', 'Thanks for your feedback.');
+      return true;
     }).catch(function () {
       if (statusEl) statusEl.textContent = text('خطای شبکه.', 'Network error.');
+      return false;
     });
   }
 
@@ -222,7 +229,10 @@
     copyBtn.setAttribute('aria-label', text('کپی پاسخ', 'Copy response'));
     copyBtn.innerHTML = SVG_COPY;
     copyBtn.onclick = function () {
-      var t = bubble.innerText || bubble.textContent || '';
+      /* the bubble also hosts the action buttons and the feedback form: copy only the answer itself */
+      var clone = bubble.cloneNode(true);
+      [].forEach.call(clone.querySelectorAll('.msg-actions, .fb-comment'), function (n) { n.remove(); });
+      var t = (clone.textContent || '').trim();
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(t).then(function () {
           copyBtn.classList.add('active-up');
@@ -291,10 +301,14 @@
       if (ta) ta.value = '';
       statusEl.textContent = '';
     };
-    commentWrap.querySelector('.fb-submit').onclick = function () {
-      if (!pendingRating) return;
-      submitFeedback(chatId, messageId, pendingRating, (ta && ta.value) || '', statusEl, upBtn, downBtn);
-      commentWrap.classList.remove('open');
+    var submitBtn = commentWrap.querySelector('.fb-submit');
+    submitBtn.onclick = function () {
+      if (!pendingRating || submitBtn.disabled) return;
+      submitBtn.disabled = true;
+      submitFeedback(chatId, messageId, pendingRating, (ta && ta.value) || '', statusEl, upBtn, downBtn).then(function (ok) {
+        submitBtn.disabled = false;
+        if (ok) commentWrap.classList.remove('open');   /* on failure the form stays open so nothing typed is lost */
+      });
     };
 
     actions.appendChild(copyBtn);
@@ -324,7 +338,7 @@
           if (node.nodeType !== 1) return;
           if (node.classList && node.classList.contains('msg') && node.classList.contains('ai')) {
             var mid = node.getAttribute('data-message-id') || '';
-            var cid = node.getAttribute('data-chat-id') || (window.currentChat || '');
+            var cid = node.getAttribute('data-chat-id') || (curChat() || '');
             // skip pure typing indicator
             if (node.id === 'typing' || node.querySelector('.typing-bubble')) return;
             attachActions(node, mid, cid);

@@ -31,7 +31,7 @@ html[dir="ltr"] .msg.user{flex-direction:row-reverse}
 html[dir="ltr"] .msg.ai{flex-direction:row}
 @media(max-width:750px){
   html[dir="ltr"] .side,html[dir="ltr"] .app.side-collapsed .side{right:auto;left:0;transform:translateX(-100%);box-shadow:30px 0 80px #000;border-left-width:0;border-right-width:1px}
-  html[dir="ltr"] .side.open{transform:none}
+  html[dir="ltr"] .side.open,html[dir="ltr"] .app.side-collapsed .side.open{transform:none;visibility:visible}
 }
 
 /* Global settings panel */

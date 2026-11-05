@@ -1,10 +1,13 @@
 (function(){
  'use strict';
  const $=id=>document.getElementById(id);
+ /* user/sb are top-level let/const of the main page script: reachable by name, but not as properties of window */
+ const curUser=()=>{try{return user}catch(e){return null}};
+ const curSb=()=>{try{return sb}catch(e){return null}};
  const modal=$('settingsModal');
  if(!modal)return;
  const text=(fa,en)=>((window.I18N&&I18N.lang==='en')?en:fa);
- function paintLang(){modal.querySelectorAll('[data-fa][data-en]').forEach(el=>{el.textContent=text(el.dataset.fa,el.dataset.en)});$('settingsTitle').textContent=text('تنظیمات','Settings');$('settingsCurrentEmail').textContent=(window.user&&user.email)||'—';$('settingsTheme').textContent=text(document.documentElement.dataset.theme==='light'?'تم روشن':'تم تاریک',document.documentElement.dataset.theme==='light'?'Light theme':'Dark theme');$('settingsLanguage').textContent=text('تغییر به انگلیسی','Switch to Persian');}
+ function paintLang(){modal.querySelectorAll('[data-fa][data-en]').forEach(el=>{el.textContent=text(el.dataset.fa,el.dataset.en)});$('settingsTitle').textContent=text('تنظیمات','Settings');$('settingsCurrentEmail').textContent=(curUser()&&curUser().email)||'—';$('settingsTheme').textContent=text(document.documentElement.dataset.theme==='light'?'تم روشن':'تم تاریک',document.documentElement.dataset.theme==='light'?'Light theme':'Dark theme');$('settingsLanguage').textContent=text('تغییر به انگلیسی','Switch to Persian');}
  function open(){modal.classList.remove('hidden');paintLang();document.body.style.overflow='hidden';$('settingsClose').focus()}
  function close(){modal.classList.add('hidden');document.body.style.overflow='';$('settingsOpen').focus()}
  document.querySelectorAll('[data-settings-open]').forEach(b=>b.addEventListener('click',open));
@@ -19,16 +22,16 @@
    const input=$('settingsNewEmail'),status=$('settingsEmailStatus'),btn=$('settingsChangeEmail'),email=input.value.trim().toLowerCase();
    status.textContent='';status.style.color='';
    if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){status.textContent=text('یک ایمیل معتبر وارد کنید.','Enter a valid email address.');status.style.color='#ff8f9b';return}
-   if(email===((window.user&&user.email)||'').toLowerCase()){status.textContent=text('این همان ایمیل فعلی است.','This is already your current email.');return}
-   if(!window.sb||!sb.auth||!sb.auth.updateUser){status.textContent=text('سرویس حساب در دسترس نیست.','Account service is unavailable.');status.style.color='#ff8f9b';return}
+   if(email===((curUser()&&curUser().email)||'').toLowerCase()){status.textContent=text('این همان ایمیل فعلی است.','This is already your current email.');return}
+   const sbc=curSb();if(!sbc||!sbc.auth||!sbc.auth.updateUser){status.textContent=text('سرویس حساب در دسترس نیست.','Account service is unavailable.');status.style.color='#ff8f9b';return}
    btn.disabled=true;status.textContent=text('در حال ارسال درخواست…','Submitting request…');
-   try{const {error}=await sb.auth.updateUser({email});if(error)throw error;status.textContent=text('درخواست ثبت شد. صندوق ورودی ایمیل جدید را برای لینک تأیید بررسی کنید.','Request submitted. Check the new email inbox for a confirmation link.');input.value='';}
+   try{const {error}=await sbc.auth.updateUser({email});if(error)throw error;status.textContent=text('درخواست ثبت شد. صندوق ورودی ایمیل جدید را برای لینک تأیید بررسی کنید.','Request submitted. Check the new email inbox for a confirmation link.');input.value='';}
    catch(e){console.error('email change failed',e);status.textContent=text('تغییر ایمیل انجام نشد: ','Email change failed: ')+(e&&e.message?e.message:text('خطای نامشخص','Unknown error'));status.style.color='#ff8f9b'}
    finally{btn.disabled=false}
  });
  $('settingsLogout').addEventListener('click',()=>{close();const b=$('logout');if(b)b.click()});
  $('settingsExport').addEventListener('click',()=>{
-   const data={product:'Unknown AI',exportedAt:new Date().toISOString(),account:{email:window.user&&user.email||null,id:window.user&&user.id||null},preferences:{theme:document.documentElement.dataset.theme||'dark',language:window.I18N&&I18N.lang||'fa'}};
+   const data={product:'Unknown AI',exportedAt:new Date().toISOString(),account:{email:(curUser()&&curUser().email)||null,id:(curUser()&&curUser().id)||null},preferences:{theme:document.documentElement.dataset.theme||'dark',language:window.I18N&&I18N.lang||'fa'}};
    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='unknown-ai-account-info.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
  });
  paintLang();

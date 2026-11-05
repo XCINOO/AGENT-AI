@@ -29,6 +29,7 @@
     if (!w || w.querySelector('.suggest')) return;
     var box = document.createElement('div');
     box.className = 'suggest';
+    box.setAttribute('data-ps', '1');
     SETS[lang()].forEach(function (s, idx) {
       var b = document.createElement('button');
       b.type = 'button';
@@ -39,9 +40,10 @@
       var d = document.createElement('span'); d.textContent = s.d;
       tx.appendChild(t); tx.appendChild(d);
       b.appendChild(ic); b.appendChild(tx);
+      b.setAttribute('data-ps-i', String(idx));
       b.addEventListener('click', function () {
         var i = g('input'); if (!i) return;
-        i.value = s.p;
+        i.value = SETS[lang()][idx].p;
         i.dispatchEvent(new Event('input', { bubbles: true }));
         i.focus();
         try { i.setSelectionRange(i.value.length, i.value.length); } catch (e) {}
@@ -52,10 +54,21 @@
   }
   var m = g('messages');
   if (m && window.MutationObserver) new MutationObserver(render).observe(m, { childList: true });
+  /* The default suggestions rendered by welcome() carry data-i18n attributes, so I18N.apply() already
+     translates them in place. Only the cards created here need re-painting, and they are updated in
+     place too (no removal / replacement). */
   document.addEventListener('langchange', function () {
-    var old = document.querySelector('#messages .suggest');
-    if (old) old.remove();
-    render();
+    var own = document.querySelector('#messages .suggest[data-ps]');
+    if (!own) { render(); return; }
+    var set = SETS[lang()], btns = own.querySelectorAll('button');
+    for (var i = 0; i < btns.length && i < set.length; i++) {
+      var b = btns[i], s = set[i];
+      var t = b.querySelector('.st b'), d = b.querySelector('.st span');
+      if (t) t.textContent = s.t;
+      if (d) d.textContent = s.d;
+      b.onclick = null;
+      b.setAttribute('data-ps-i', String(i));
+    }
   });
   render();
 })();

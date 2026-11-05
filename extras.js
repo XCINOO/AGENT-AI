@@ -37,6 +37,13 @@
   /* دسترسی امن به متغیرهای سراسری اسکریپت اصلی */
   function curUser(){try{return user}catch(e){return null}}
   function curChat(){try{return currentChat}catch(e){return null}}
+  function curSb(){try{return sb}catch(e){return null}}
+  /* title exactly as the history list renders it (the default title is translated) */
+  function shownTitle(t){
+    var raw=(t&&t.title)||'';
+    try{if(typeof chatTitle==='function')return chatTitle({title:raw})}catch(e){}
+    return raw||'گفتگوی جدید';
+  }
 
   /* =================================================================
      ۱) متن چرخشی زیر لوگو
@@ -148,7 +155,7 @@
     els.forEach(function(el,i){
       var c=cache[i];
       if(el.getAttribute('data-cid'))return;
-      if((el.textContent||'')!==(c.title||'گفتگوی جدید'))return;   /* اطمینان از تطابق آیتم و داده */
+      if((el.textContent||'')!==shownTitle(c))return;   /* اطمینان از تطابق آیتم و داده */
       el.setAttribute('data-cid',c.id);el.classList.add('hasmore');
       var b=document.createElement('button');
       b.type='button';b.className='chatmore';b.innerHTML=DOTS;
@@ -237,7 +244,7 @@
     if(si&&si.value.trim())si.dispatchEvent(new Event('input'));   /* نتایج جست‌وجوی باز هم تازه شود */
   }
   async function deleteOne(id){
-    var u=curUser();if(!u)throw new Error('no user');
+    var u=curUser(),sb=curSb();if(!u||!sb)throw new Error('no user');
     var r1=await sb.from('messages').delete().eq('chat_id',id).eq('user_id',u.id);
     if(r1.error)console.warn('messages delete',r1.error);
     var r2=await sb.from('chats').delete().eq('id',id).eq('user_id',u.id).select('id');
@@ -250,7 +257,7 @@
     await refreshAfterDelete(false,id);
   }
   async function deleteAll(){
-    var u=curUser();if(!u)throw new Error('no user');
+    var u=curUser(),sb=curSb();if(!u||!sb)throw new Error('no user');
     var r1=await sb.from('messages').delete().eq('user_id',u.id);
     if(r1.error)console.warn('messages delete',r1.error);
     var r2=await sb.from('chats').delete().eq('user_id',u.id).select('id');
@@ -261,7 +268,7 @@
     await refreshAfterDelete(true,null);
   }
   function askDeleteOne(t){
-    var title=String(t.title||'گفتگوی جدید');
+    var title=String(shownTitle(t));
     if(title.length>60)title=title.slice(0,60)+'…';
     showDialog({title:TXT.single,sub:title,keep:TXT.keep,del:TXT.del,returnTo:t.btn,run:function(){return deleteOne(t.id)}});
   }
