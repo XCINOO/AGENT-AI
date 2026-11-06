@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.workers.dev https://s422nb.bot-keep.xyz https://unknown-ai-backend-production.up.railway.app; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#060607">
+<meta name="theme-color" content="#0a0a0b">
 <title>پنل مدیریت Unknown AI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./admin.css">
 </head>
 <body>
@@ -75,12 +75,12 @@
   <aside id="side">
     <div class="brand"><span class="brand-dot"></span><div><b>Unknown AI</b><small>پنل مدیریت</small></div></div>
     <nav id="nav" aria-label="بخش‌ها">
-      <button class="navbtn active" data-view="dash">داشبورد</button>
-      <button class="navbtn" data-view="users">کاربران</button>
-      <button class="navbtn" data-view="support">پشتیبانی</button>
-      <button class="navbtn" data-view="reports">گزارش‌ها</button>
-      <button class="navbtn" data-view="audit">رویدادهای مدیریتی</button>
-      <button class="navbtn" data-view="admins" id="navAdmins">مدیران</button>
+      <button class="navbtn active" data-view="dash"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>داشبورد</button>
+      <button class="navbtn" data-view="users"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.7a3.5 3.5 0 0 1 0 6.6M18 14.8c1.9.7 3.2 2.4 3.5 5.2"/></svg>کاربران</button>
+      <button class="navbtn" data-view="support"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-8l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg>پشتیبانی</button>
+      <button class="navbtn" data-view="reports"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>گزارش‌ها</button>
+      <button class="navbtn" data-view="audit"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>رویدادهای مدیریتی</button>
+      <button class="navbtn" data-view="admins" id="navAdmins"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>مدیران</button>
     </nav>
     <div class="side-foot">
       <div id="meBadge" class="role-badge"></div>
@@ -92,6 +92,7 @@
     <header id="top">
       <h1 id="pageTitle">داشبورد</h1>
       <div class="top-actions">
+        <span id="todayMeta" class="date-chip"></span>
         <span id="refreshMeta" class="muted small"></span>
         <button id="refreshBtn" class="btn btn-ghost btn-sm" title="بازخوانی">⟳</button>
         <button id="menuBtn" class="btn btn-ghost btn-sm only-mobile">☰</button>
@@ -125,5 +126,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1"></script>
 <script src="./config.js"></script>
 <script src="./admin.js"></script>
+<script src="./admin-ui.js"></script>
 </body>
 </html>
