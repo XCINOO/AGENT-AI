@@ -1,6 +1,5 @@
-/* Unknown AI — Admin panel · pixel-close match to the Ofinans Digital Finance Dashboard reference
-   Visual redesign only. All class names & CSS variables used by admin.html / admin.js are preserved.
-   RTL + fully responsive. */
+/* Unknown AI Admin — exact visual match to Ofinans Digital Finance Dashboard
+   All class names used by admin.js preserved. RTL + responsive. */
 :root{
   --bg:#09090b;
   --bg2:#0c0c0e;
@@ -17,18 +16,14 @@
   --amber:#ffb020;
   --blue:#4d8dff;
   --pink:#f0407a;
-  --teal:#16b096;
-  --orange:#ff7026;
   --grad:linear-gradient(135deg,#ff4a5e 0%,#ff6a3a 50%,#ff8c2a 100%);
   --grad-btn:linear-gradient(135deg,#ff4a5e,#ff6a3a);
   --radius:20px;
-  --radius-sm:14px;
   --ease:cubic-bezier(.22,.61,.36,1);
   --font:Inter,Vazirmatn,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
   --shadow:0 20px 50px rgba(0,0,0,.5);
   --shadow-card:0 12px 36px rgba(0,0,0,.38);
 }
-
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 html{scrollbar-color:var(--line2) var(--bg)}
@@ -43,8 +38,6 @@ body{
   min-height:100vh;
   overflow-x:hidden;
 }
-
-/* ===== Aurora top banner – exact match to reference ===== */
 body::before{
   content:"";
   position:fixed;
@@ -61,7 +54,6 @@ body::before{
   -webkit-mask-image:linear-gradient(#000 42%,transparent 100%);
   mask-image:linear-gradient(#000 42%,transparent 100%);
 }
-
 button{font-family:inherit;cursor:pointer}
 input,select,textarea{
   font-family:inherit;
@@ -84,8 +76,6 @@ input:focus,select:focus,textarea:focus{
 .muted{color:var(--muted)}
 .small{font-size:12px}
 .dir-ltr{direction:ltr;unicode-bidi:plaintext;text-align:start}
-
-/* ===== Screens (login / setup / loader) ===== */
 .screen{
   position:fixed;inset:0;
   display:flex;align-items:center;justify-content:center;
@@ -103,8 +93,6 @@ input:focus,select:focus,textarea:focus{
   gap:10px;padding:34px 10px;color:var(--muted);font-size:13px;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* ===== Auth card ===== */
 .auth-card{
   width:min(400px,92vw);
   background:linear-gradient(180deg,#18181b 0%,#101012 100%);
@@ -132,8 +120,6 @@ input:focus,select:focus,textarea:focus{
 .otp{letter-spacing:.55em;text-align:center;font-size:20px;direction:ltr}
 .auth-msg{min-height:22px;margin:14px 0 0;font-size:13px;color:var(--muted)}
 .auth-msg.err{color:var(--red)}
-
-/* ===== Segmented tabs (1D / 1W / 1M style from reference) ===== */
 .auth-tabs,.tabs{
   display:inline-flex;gap:4px;padding:4px;
   background:rgba(0,0,0,.35);
@@ -153,8 +139,6 @@ input:focus,select:focus,textarea:focus{
   color:#fff;
   box-shadow:0 4px 18px rgba(255,91,58,.42);
 }
-
-/* ===== Bootstrap entry ===== */
 .btn-link{
   display:block;width:100%;margin-top:18px;padding:11px 12px;
   background:transparent;border:1px dashed var(--line2);
@@ -168,8 +152,6 @@ input:focus,select:focus,textarea:focus{
 #setup input{margin-bottom:0}
 #setup .btn{width:100%;margin-top:18px}
 #setup #setupBack{margin-top:10px}
-
-/* ===== Buttons – match reference primary / secondary ===== */
 .btn{
   border:1px solid var(--line2);
   background:var(--card2);
@@ -204,8 +186,6 @@ input:focus,select:focus,textarea:focus{
 .btn-ghost:hover{background:var(--red-soft)}
 .btn-sm{padding:5px 12px;font-size:12.5px;border-radius:9px}
 .btn-wide{width:100%}
-
-/* ===== App layout ===== */
 #app{display:flex;min-height:100vh;position:relative;z-index:1}
 #side{
   width:232px;flex-shrink:0;
@@ -261,7 +241,6 @@ input:focus,select:focus,textarea:focus{
   background:var(--red-soft);border:1px solid var(--red-line);
   padding:4px 12px;border-radius:99px;font-weight:700;
 }
-
 #main{flex:1;min-width:0;display:flex;flex-direction:column}
 #top{
   display:flex;align-items:center;justify-content:space-between;
@@ -282,8 +261,6 @@ input:focus,select:focus,textarea:focus{
 }
 .view{display:flex;flex-direction:column;gap:22px;animation:fadein .32s var(--ease)}
 @keyframes fadein{from{opacity:0;transform:translateY(8px)}}
-
-/* ===== Cards – soft dark panels like reference ===== */
 .card{
   background:linear-gradient(165deg,#161618 0%,#111113 100%);
   border:1px solid var(--line);
@@ -299,8 +276,6 @@ input:focus,select:focus,textarea:focus{
   color:var(--txt);letter-spacing:-.2px;
 }
 .grid{display:grid;gap:18px}
-
-/* ===== KPI strip = Overall Portfolio panel ===== */
 .kpis{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(148px,1fr));
@@ -336,8 +311,6 @@ input:focus,select:focus,textarea:focus{
 }
 .cols-2{grid-template-columns:1fr 1fr}
 .cols-3{grid-template-columns:2fr 1fr 1fr}
-
-/* ===== Charts – neon glow line like reference ===== */
 .chart{position:relative}
 .chart svg{
   width:100%;height:auto;display:block;
@@ -351,8 +324,6 @@ input:focus,select:focus,textarea:focus{
   display:inline-block;width:10px;height:10px;
   border-radius:50%;margin-inline-end:7px;vertical-align:-1px;
 }
-
-/* ===== Tables ===== */
 .tbl-wrap{
   overflow-x:auto;
   border:1px solid var(--line);
@@ -388,15 +359,11 @@ tr.clickable{cursor:pointer}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-inline-end:6px;vertical-align:1px}
 .dot.on{background:var(--green);box-shadow:0 0 8px var(--green)}
 .dot.off{background:var(--line2)}
-
-/* ===== Toolbar / pager ===== */
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .toolbar input[type=text],.toolbar input[type=search]{min-width:220px;flex:1}
 .toolbar select{min-width:130px}
 .pager{display:flex;gap:8px;align-items:center;justify-content:center;padding:8px 0}
 .pager .muted{font-size:12.5px}
-
-/* ===== User detail ===== */
 .detail-head{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:flex-start}
 .info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
 .info-item{
@@ -420,8 +387,6 @@ tr.clickable{cursor:pointer}
   font-size:13px;align-items:center;flex-wrap:wrap;
 }
 .list-item:last-child{border-bottom:none}
-
-/* ===== Support ===== */
 .sup-grid{display:grid;grid-template-columns:minmax(280px,1fr) 2fr;gap:18px;align-items:start}
 .thread{
   border:1px solid var(--line);border-radius:14px;
@@ -433,8 +398,6 @@ tr.clickable{cursor:pointer}
 .thread.sel{border-color:var(--red);background:var(--red-soft)}
 .reply-box{display:flex;gap:8px;margin-top:14px}
 .reply-box textarea{flex:1;resize:vertical;min-height:70px}
-
-/* ===== Modal / toast ===== */
 .modal-wrap{
   position:fixed;inset:0;
   background:rgba(0,0,0,.72);
@@ -463,15 +426,12 @@ tr.clickable{cursor:pointer}
 }
 .toast.ok{border-color:rgba(61,220,151,.5)}
 @keyframes toastin{from{opacity:0;transform:translateX(50%) translateY(12px)}}
-
 .empty{padding:28px;text-align:center;color:var(--muted);font-size:13.5px}
 .err-note{
   color:var(--red);font-size:13px;
   background:var(--red-soft);border:1px solid var(--red-line);
   border-radius:12px;padding:11px 15px;
 }
-
-/* ===== Nav icons + header date chip ===== */
 .ni{
   width:19px;height:19px;flex:none;
   fill:none;stroke:currentColor;stroke-width:1.7;
@@ -486,8 +446,6 @@ tr.clickable{cursor:pointer}
   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
   white-space:nowrap;font-weight:500;
 }
-
-/* ===== Responsive – mobile / tablet ===== */
 @media (max-width:1100px){
   .cols-3{grid-template-columns:1fr 1fr}
   .sup-grid{grid-template-columns:1fr}

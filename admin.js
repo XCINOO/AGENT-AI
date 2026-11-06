@@ -142,7 +142,7 @@
       }
       return fetch(apiUrl(path), init);
     }).then(function (res) {
-      if (res.status === 401) { var e401 = new Error('unauthorized'); e401.status = 401; showAuth(); throw e401; }
+      if (res.status === 401) { clearInterval(refreshTimer); var e401 = new Error('unauthorized'); e401.status = 401; showAuth(); throw e401; }
       if (!res.ok) {
         return res.json().catch(function () { return {}; }).then(function (d) {
           var msg = faError(d, res.status);
@@ -354,12 +354,15 @@
       sb.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false } }).then(function (r) {
         $('admSendOtp').disabled = false;
         if (r.error) {
-          authMsg(r.error.code === 'over_email_send_rate_limit' ? 'چند دقیقه دیگر دوباره تلاش کنید.' : (r.error.message || 'ارسال کد ناموفق بود.'), true);
+          authMsg(passwordError(r.error), true);
           return;
         }
         emailForOtp = email;
         showAuthTab('otpCode');
         authMsg('کد ۶ رقمی ارسال شد.');
+      }).catch(function () {
+        $('admSendOtp').disabled = false;
+        authMsg('اتصال به سرویس احراز هویت برقرار نشد.', true);
       });
     });
     on($('admVerifyOtp'), 'click', function () {
@@ -370,6 +373,9 @@
         $('admVerifyOtp').disabled = false;
         if (r.error) return authMsg('کد نادرست یا منقضی شده است.', true);
         boot();
+      }).catch(function () {
+        $('admVerifyOtp').disabled = false;
+        authMsg('اتصال به سرویس احراز هویت برقرار نشد.', true);
       });
     });
     on($('admBack'), 'click', function () { showAuthTab('otp'); authMsg(''); });
@@ -394,6 +400,7 @@
   function showApp() {
     $('loader').classList.add('hidden');
     $('auth').classList.add('hidden');
+    $('setup').classList.add('hidden');
     $('app').classList.remove('hidden');
     $('meBadge').textContent = roleLabel(me.role) + ' · ' + (me.email || '');
     $('navAdmins').classList.toggle('hidden', !isOwner());
