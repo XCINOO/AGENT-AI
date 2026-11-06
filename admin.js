@@ -160,17 +160,29 @@
   }
 
   // ---------- confirm modal ----------
-  function askModal(title, bodyNode, okLabel, onOk) {
+  var modalReturnFocus = null;
+  function closeModal() {
+    $('modalWrap').classList.add('hidden');
+    if (modalReturnFocus && modalReturnFocus.focus && document.body.contains(modalReturnFocus)) { try { modalReturnFocus.focus(); } catch (e) {} }
+    modalReturnFocus = null;
+  }
+  /** `danger` paints the confirm button red-solid (destructive); otherwise it is the normal primary button. */
+  function askModal(title, bodyNode, okLabel, onOk, danger) {
     $('modalTitle').textContent = title;
     var b = $('modalBody'); b.textContent = '';
     if (bodyNode) b.appendChild(bodyNode);
-    $('modalOk').textContent = okLabel || 'تأیید';
+    var ok = $('modalOk');
+    ok.textContent = okLabel || 'تأیید';
+    ok.className = 'btn ' + (danger ? 'btn-danger' : 'btn-primary');
+    modalReturnFocus = document.activeElement;
     $('modalWrap').classList.remove('hidden');
-    $('modalOk').onclick = function () {
-      $('modalWrap').classList.add('hidden');
+    ok.onclick = function () {
+      closeModal();
       Promise.resolve(onOk && onOk(b)).catch(function () {});
     };
-    $('modalCancel').onclick = function () { $('modalWrap').classList.add('hidden'); };
+    $('modalCancel').onclick = closeModal;
+    var firstField = b.querySelector('input,textarea,select');
+    setTimeout(function () { (firstField || ok).focus(); }, 30);
   }
 
   // ---------- auth ----------
@@ -407,6 +419,8 @@
     var emailEl = $('meEmail'); if (emailEl) emailEl.textContent = me.email || '';
     var avEl = $('meAvatar'); if (avEl) avEl.textContent = String(me.email || me.role || 'A').trim().charAt(0).toUpperCase();
     $('navAdmins').classList.toggle('hidden', !isOwner());
+    var tm = $('todayMeta');
+    if (tm && !tm.textContent) { try { tm.textContent = new Intl.DateTimeFormat('fa-IR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date()); } catch (e) {} }
   }
   function roleLabel(r) { return { owner: 'مالک', admin: 'مدیر', support: 'پشتیبانی', analyst: 'تحلیل‌گر' }[r] || r; }
 
@@ -415,9 +429,14 @@
     if (v === 'admins' && !isOwner()) v = 'dash';
     S.view = v;
     document.body.setAttribute('data-view', v);
-    Array.prototype.forEach.call(document.querySelectorAll('.navbtn'), function (b) { b.classList.toggle('active', b.getAttribute('data-view') === v); });
+    Array.prototype.forEach.call(document.querySelectorAll('.navbtn[data-view]'), function (b) {
+      var cur = b.getAttribute('data-view') === v || (v === 'user' && b.getAttribute('data-view') === 'users');
+      b.classList.toggle('active', cur);
+      if (cur) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
     Array.prototype.forEach.call(document.querySelectorAll('.view'), function (s) { s.classList.add('hidden'); });
     $('pageTitle').textContent = VIEW_TITLES[v];
+    document.title = VIEW_TITLES[v] + ' · پنل مدیریت Unknown AI';
     $('view-' + v).classList.remove('hidden');
     document.body.classList.remove('nav-open');
     clearInterval(refreshTimer);
@@ -429,14 +448,15 @@
     var fn = { dash: loadDash, users: loadUsers, user: loadUser, support: loadSupport, reports: loadReports, audit: loadAudit, admins: loadAdmins }[v];
     var box = $('view-' + v);
     if (!fn) { box.textContent = ''; return; }
-    var spin = null;
+    var sk = null;
     if (!quiet) {
       box.textContent = '';
-      spin = h('div', { cls: 'loading-row' }, [h('div', { cls: 'spinner spinner-sm' }), h('span', { cls: 'muted', text: 'در حال دریافت داده…' })]);
-      box.appendChild(spin);
+      // dashboard: skeleton is replaced wholesale by renderDash(); other views: skeleton sits under the view's own shell
+      if (v === 'dash') box.appendChild(skeleton('dash'));
     }
-    var p;
-    try { p = fn(box, quiet); } finally { if (spin && spin.parentNode && v !== 'dash') spin.parentNode.removeChild(spin); }
+    var p = fn(box, quiet);
+    if (!quiet && v !== 'dash' && v !== 'users') { sk = skeleton('list'); box.appendChild(sk); }
+    Promise.resolve(p).then(function () { if (sk && sk.parentNode) sk.parentNode.removeChild(sk); }, function () { if (sk && sk.parentNode) sk.parentNode.removeChild(sk); });
     Promise.resolve(p).catch(function (e) {
       if (e && (e.message === 'no_session' || e.message === 'unauthorized')) return;
       if (quiet) return; // background refresh failed: keep what is on screen
@@ -448,14 +468,14 @@
     });
   }
 
-  // ---------- charts ----------
+  // ---------- charts & small UI helpers ----------
   var SVGNS = 'http://www.w3.org/2000/svg';
   function svgEl(name, attrs) {
     var e = document.createElementNS(SVGNS, name);
     Object.keys(attrs || {}).forEach(function (k) { e.setAttribute(k, attrs[k]); });
     return e;
   }
-  /** 1.2K / 3.4M / 5B with Persian digits (short enough for axis labels and bar tops). */
+  /** 1.2K / 3.4M / 5B with Persian digits (short enough for axis labels). */
   function compact(n) {
     n = Number(n) || 0;
     var abs = Math.abs(n), div = 1, suf = '';
@@ -469,23 +489,63 @@
     return m * p;
   }
   function pctChange(cur, prev) { return prev > 0 ? ((cur - prev) / prev) * 100 : null; }
-  function deltaBadge(p) {
-    if (p === null || !isFinite(p)) return null;
-    var up = p >= 0;
-    return h('span', { cls: 'delta ' + (up ? 'up' : 'down'), text: (up ? '↑ ' : '↓ ') + Math.abs(p).toLocaleString('fa-IR', { maximumFractionDigits: 1 }) + '٪' });
-  }
   function sum(arr) { return arr.reduce(function (a, b) { return a + b; }, 0); }
+  function icon(path) { var s = svgEl('svg', { viewBox: '0 0 24 24', 'class': 'ni', 'aria-hidden': 'true' }); s.innerHTML = path; return s; }
+  function arrow(up) {
+    var s = svgEl('svg', { viewBox: '0 0 24 24', 'class': 'arr', 'aria-hidden': 'true' });
+    s.innerHTML = up ? '<path d="M7 17 17 7M9 7h8v8"/>' : '<path d="M7 7l10 10M17 9v8H9"/>';
+    return s;
+  }
+  /** ↗ 1.2٪ (green when good). `invert` flips the meaning for "lower is better" metrics. */
+  function deltaBadge(p, invert) {
+    if (p === null || p === undefined || !isFinite(p)) return null;
+    var up = p >= 0, good = invert ? !up : up;
+    return h('span', { cls: 'delta ' + (good ? 'good' : 'bad') }, [arrow(up), h('span', { text: Math.abs(p).toLocaleString('fa-IR', { maximumFractionDigits: 1 }) + '٪' })]);
+  }
+  function faDay(iso) { try { return new Intl.DateTimeFormat('fa-IR', { day: 'numeric', month: 'numeric' }).format(new Date(iso)); } catch (e) { return iso; } }
+  function hueOf(s) { var x = 0; s = String(s || ''); for (var i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) % 360; return x; }
+  function avatarEl(who, extraCls, bg) {
+    var el = h('span', { cls: 'av' + (extraCls ? ' ' + extraCls : ''), text: String(who || '?').trim().charAt(0) || '?' });
+    el.style.background = bg || ('linear-gradient(135deg,hsl(' + hueOf(who) + ' 55% 52%),hsl(' + ((hueOf(who) + 40) % 360) + ' 55% 40%))');
+    return el;
+  }
+  function card(title, kids) { return h('div', { cls: 'card' }, [h('h3', { text: title })].concat(kids)); }
+  function badge(status) {
+    var map = { active: 'فعال', suspended: 'معلّق', banned: 'بن', open: 'باز', closed: 'بسته' };
+    var cls = ['active', 'suspended', 'banned', 'open', 'closed'].indexOf(status) >= 0 ? status : 'closed';
+    return h('span', { cls: 'badge ' + cls, text: map[status] || status || '—' });
+  }
+  /** Copies <th> text into each cell's data-label so the table can turn into stacked cards on phones. */
+  function labelTable(table) {
+    var heads = Array.prototype.map.call(table.querySelectorAll('thead th'), function (t) { return t.textContent; });
+    table.classList.add('rt');
+    Array.prototype.forEach.call(table.querySelectorAll('tbody tr'), function (tr) {
+      Array.prototype.forEach.call(tr.children, function (td, i) { if (heads[i]) td.setAttribute('data-label', heads[i]); });
+    });
+    return table;
+  }
+  function skeleton(kind) {
+    var w = h('div', { cls: 'sk-wrap', 'aria-hidden': 'true' });
+    if (kind === 'dash') {
+      w.appendChild(h('div', { cls: 'kpi5' }, [1, 2, 3, 4, 5].map(function () { return h('div', { cls: 'sk sk-kpi' }); })));
+      w.appendChild(h('div', { cls: 'dash-grid' }, [h('div', { cls: 'sk sk-panel' }), h('div', { cls: 'sk sk-panel' })]));
+    } else {
+      [1, 2, 3, 4].forEach(function () { w.appendChild(h('div', { cls: 'sk sk-row' })); });
+    }
+    return w;
+  }
 
   /**
-   * Responsive area chart: redraws at the real pixel width (ResizeObserver), y-axis on the right,
-   * dashed grid, white tooltip pill that follows the pointer and rests on the latest point.
+   * Responsive area chart: redraws at the real pixel width (ResizeObserver). Time runs right → left (RTL),
+   * y-axis labels on the right, dashed grid, tooltip pill that follows the pointer and rests on the latest point.
+   * Colours come from CSS variables so light/dark switch without a redraw.
    * data: [{ label, value }] in chronological order.
    */
   function areaChart(data, opts) {
     opts = opts || {};
-    var color = opts.color || '#ff7a2f';
-    var H = opts.height || 250;
-    var padL = 8, padR = 46, padT = 50, padB = 28;
+    var color = opts.color || 'var(--c1)';
+    var H = opts.height || 240;
+    var padL = 8, padR = 44, padT = 50, padB = 28;
     var n = data.length;
     var wrap = h('div', { cls: 'achart' });
     wrap.style.height = H + 'px';
@@ -517,18 +577,18 @@
       var max = niceCeil(Math.max.apply(null, data.map(function (d) { return d.value || 0; })));
       var defs = svgEl('defs');
       var lg = svgEl('linearGradient', { id: gid, x1: 0, y1: 0, x2: 0, y2: 1 });
-      lg.appendChild(svgEl('stop', { offset: '0', 'stop-color': color, 'stop-opacity': '.62' }));
-      lg.appendChild(svgEl('stop', { offset: '1', 'stop-color': color, 'stop-opacity': '0' }));
-      defs.appendChild(lg); svg.appendChild(defs);
+      var s1 = svgEl('stop', { offset: '0', 'stop-opacity': '.32' }); s1.style.stopColor = color;
+      var s2 = svgEl('stop', { offset: '1', 'stop-opacity': '0' }); s2.style.stopColor = color;
+      lg.appendChild(s1); lg.appendChild(s2); defs.appendChild(lg); svg.appendChild(defs);
       for (var t = 0; t <= 4; t++) {
         var gy = padT + ch - (ch * t) / 4;
-        svg.appendChild(svgEl('line', { x1: padL, x2: padL + cw, y1: gy, y2: gy, stroke: 'rgba(255,255,255,.07)', 'stroke-dasharray': t === 0 ? '0' : '3 6' }));
-        var yl = svgEl('text', { x: padL + cw + 12, y: gy + 4, fill: '#a89a8d', 'font-size': '11', 'text-anchor': 'start' });
+        svg.appendChild(svgEl('line', { x1: padL, x2: padL + cw, y1: gy, y2: gy, 'class': 'ax-grid', 'stroke-dasharray': t === 0 ? '0' : '3 6' }));
+        var yl = svgEl('text', { x: padL + cw + 12, y: gy + 4, 'class': 'ax-label', 'font-size': '11', 'text-anchor': 'start' });
         yl.textContent = compact((max * t) / 4);
         svg.appendChild(yl);
       }
       pts = data.map(function (d, i) {
-        return { d: d, x: padL + (n > 1 ? (i / (n - 1)) * cw : cw / 2), y: padT + ch - ((d.value || 0) / max) * ch };
+        return { d: d, x: padL + cw - (n > 1 ? (i / (n - 1)) * cw : cw / 2), y: padT + ch - ((d.value || 0) / max) * ch };
       });
       var line = 'M' + pts[0].x + ',' + pts[0].y;
       for (var i = 1; i < pts.length; i++) {
@@ -537,18 +597,20 @@
       }
       var base = padT + ch;
       svg.appendChild(svgEl('path', { d: line + ' L' + pts[pts.length - 1].x + ',' + base + ' L' + pts[0].x + ',' + base + ' Z', fill: 'url(#' + gid + ')' }));
-      svg.appendChild(svgEl('path', { d: line, fill: 'none', stroke: color, 'stroke-width': '2.4', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+      var ln = svgEl('path', { d: line, fill: 'none', 'stroke-width': '2.4', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+      ln.style.stroke = color;
+      svg.appendChild(ln);
       var perLabel = Math.max(Math.floor(cw / 58), 2), step = Math.max(Math.ceil(n / perLabel), 1);
       pts.forEach(function (p, i) {
-        if (i % step !== 0 && i !== n - 1) return;
-        if (i === n - 1 && (n - 1) % step !== 0 && (n - 1 - Math.floor((n - 1) / step) * step) < step * 0.6) return;
-        var tx = svgEl('text', { x: p.x, y: H - 6, fill: '#a89a8d', 'font-size': '11', 'text-anchor': i === 0 ? 'start' : (i === n - 1 ? 'end' : 'middle') });
+        if (i % step !== 0) return;
+        var tx = svgEl('text', { x: p.x, y: H - 6, 'class': 'ax-label', 'font-size': '11', 'text-anchor': i === 0 ? 'end' : 'middle' });
         tx.textContent = p.d.label;
         svg.appendChild(tx);
       });
       marker = svgEl('g');
-      marker.appendChild(svgEl('circle', { r: 11, fill: color, 'fill-opacity': '.25' }));
-      marker.appendChild(svgEl('circle', { r: 5.5, fill: '#fff', stroke: color, 'stroke-width': '2' }));
+      var halo = svgEl('circle', { r: 11, 'fill-opacity': '.2' }); halo.style.fill = color;
+      var dot = svgEl('circle', { r: 5.5, 'class': 'mk-in', 'stroke-width': '2.2' }); dot.style.stroke = color;
+      marker.appendChild(halo); marker.appendChild(dot);
       svg.appendChild(marker);
       wrap.insertBefore(svg, tip);
       place(sel);
@@ -556,7 +618,7 @@
     function onMove(e) {
       if (!pts.length) return;
       var r = wrap.getBoundingClientRect();
-      place(Math.round(((e.clientX - r.left - padL) / cw) * (n - 1)));
+      place(Math.round((1 - (e.clientX - r.left - padL) / cw) * (n - 1)));
     }
     wrap.addEventListener('pointermove', onMove);
     wrap.addEventListener('pointerdown', onMove);
@@ -567,256 +629,294 @@
     return wrap;
   }
 
-  /** Brown bars with a green highlighted bar + value pill (hover / tap / focus moves the highlight). */
-  function barChart(data) {
-    var host = h('div', { cls: 'bchart', role: 'list' });
+  /** Vertical pill bars on a light track (like the reference); hover / tap / focus moves the tooltip. Time flows right → left. */
+  function vBars(data) {
+    var host = h('div', { cls: 'vb' });
     if (!data.length) { host.appendChild(h('div', { cls: 'empty', text: 'داده‌ای برای نمایش نیست.' })); return host; }
-    var max = Math.max.apply(null, data.map(function (d) { return d.value || 0; }).concat([1]));
-    var cols = [];
-    function select(c) { cols.forEach(function (x) { x.classList.toggle('on', x === c); }); }
+    var max = niceCeil(Math.max.apply(null, data.map(function (d) { return d.value || 0; }).concat([1])));
+    var ys = h('div', { cls: 'vb-y', 'aria-hidden': 'true' });
+    for (var t = 4; t >= 0; t--) ys.appendChild(h('span', { text: compact((max * t) / 4) }));
+    var lines = h('div', { cls: 'vb-lines', 'aria-hidden': 'true' }, [h('i'), h('i'), h('i'), h('i'), h('i')]);
+    var cols = h('div', { cls: 'vb-cols', role: 'list' }), all = [], fills = [];
+    var labelEvery = data.length > 20 ? 3 : (data.length > 10 ? 2 : 1);
+    function select(c) { all.forEach(function (x) { x.classList.toggle('on', x === c); }); }
     data.forEach(function (d, i) {
-      var bar = h('i', { cls: 'bbar' });
-      bar.style.height = Math.max(8, Math.round(((d.value || 0) / max) * 120)) + 'px';
-      var col = h('div', { cls: 'bcol' + (i === data.length - 1 ? ' on' : ''), tabindex: '0', role: 'listitem', title: d.label + ': ' + fa(d.value) }, [
-        h('span', { cls: 'bval', text: compact(d.value) }), bar, h('span', { cls: 'baxis', text: d.label })
+      var fill = h('i', { cls: 'vb-fill' });
+      var col = h('button', { cls: 'vb-col' + (i === data.length - 1 ? ' on' : ''), type: 'button', role: 'listitem', 'aria-label': d.label + ': ' + fa(d.value) }, [
+        h('span', { cls: 'vb-tip', text: fa(d.value) }),
+        h('span', { cls: 'vb-track' }, [fill]),
+        h('span', { cls: 'vb-x' + (i % labelEvery ? ' skip' : ''), text: i % labelEvery ? '' : d.label })
       ]);
       ['mouseenter', 'focus', 'click'].forEach(function (ev) { col.addEventListener(ev, function () { select(col); }); });
-      cols.push(col); host.appendChild(col);
+      all.push(col); fills.push([fill, (d.value || 0) / max]);
+      cols.appendChild(col);
     });
-    host.addEventListener('mouseleave', function () { select(cols[cols.length - 1]); });
+    cols.addEventListener('mouseleave', function () { select(all[all.length - 1]); });
+    host.appendChild(ys);
+    host.appendChild(h('div', { cls: 'vb-plot' }, [lines, cols]));
+    requestAnimationFrame(function () { requestAnimationFrame(function () {
+      fills.forEach(function (f) { f[0].style.height = (f[1] > 0 ? Math.max(f[1] * 100, 4) : 0) + '%'; });
+    }); });
     return host;
   }
-  function faDay(iso) { try { return new Intl.DateTimeFormat('fa-IR', { day: 'numeric', month: 'numeric' }).format(new Date(iso)); } catch (e) { return iso; } }
-  function hueOf(s) { var x = 0; s = String(s || ''); for (var i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) % 360; return x; }
-  function avatarEl(who, extraCls, bg) {
-    var el = h('span', { cls: 'av' + (extraCls ? ' ' + extraCls : ''), text: String(who || '?').trim().charAt(0) || '?' });
-    el.style.background = bg || ('linear-gradient(135deg,hsl(' + hueOf(who) + ' 62% 48%),hsl(' + ((hueOf(who) + 40) % 360) + ' 60% 32%))');
-    return el;
-  }
 
-  function card(title, kids) { return h('div', { cls: 'card' }, [h('h3', { text: title })].concat(kids)); }
-  function kpi(label, value, sub) {
-    return h('div', { cls: 'kpi' }, [
-      h('div', { cls: 'k-label', text: label }),
-      h('div', { cls: 'k-value', text: value }),
-      sub ? h('div', { cls: 'k-sub', text: sub }) : null
-    ]);
+  /** Donut ring; segments: [{ value, color }] */
+  function donut(segs, centerNum, centerLbl) {
+    var R = 48, C = 2 * Math.PI * R, total = sum(segs.map(function (s) { return s.value; }));
+    var svg = svgEl('svg', { viewBox: '0 0 120 120', 'aria-hidden': 'true' });
+    svg.appendChild(svgEl('circle', { cx: 60, cy: 60, r: R, 'class': 'ring' }));
+    var off = 0;
+    if (total > 0) segs.forEach(function (s) {
+      if (!(s.value > 0)) return;
+      var len = Math.max((s.value / total) * C - 5, 1);
+      var c = svgEl('circle', { cx: 60, cy: 60, r: R, 'stroke-dasharray': len + ' ' + (C - len), 'stroke-dashoffset': -off });
+      c.style.stroke = s.color;
+      svg.appendChild(c);
+      off += (s.value / total) * C;
+    });
+    return h('div', { cls: 'donut' }, [svg, h('div', { cls: 'donut-c' }, [h('b', { text: centerNum }), h('span', { text: centerLbl })])]);
   }
-  function badge(status) {
-    var map = { active: 'فعال', suspended: 'معلّق', banned: 'بن', open: 'باز', closed: 'بسته' };
-    var cls = ['active', 'suspended', 'banned', 'open', 'closed'].indexOf(status) >= 0 ? status : 'closed';
-    return h('span', { cls: 'badge ' + cls, text: map[status] || status || '—' });
-  }
-  function icon(path) { var s = svgEl('svg', { viewBox: '0 0 24 24', 'class': 'ni', 'aria-hidden': 'true' }); s.innerHTML = path; return s; }
 
   // ---------- dashboard ----------
   var DASH_METRICS = [['messages', 'پیام‌ها'], ['requests', 'درخواست‌های AI'], ['tokens', 'توکن'], ['signups', 'عضو جدید']];
-  var BAR_METRICS = [['tokens', 'توکن مصرفی'], ['requests', 'درخواست‌های AI'], ['messages', 'پیام‌ها']];
-  S.dash = S.dash || { metric: 'messages', bar: 'tokens' };
+  var RANGES = [[7, '۷ روز اخیر'], [14, '۱۴ روز اخیر'], [30, '۳۰ روز اخیر']];
+  S.dash = S.dash || { metric: 'messages', range: 14 };
+  var dashData = null;
+  var IC = {
+    users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.7a3.5 3.5 0 0 1 0 6.6M18 14.8c1.9.7 3.2 2.4 3.5 5.2"/>',
+    online: '<circle cx="12" cy="12" r="2.6"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4M17.7 6.3a8 8 0 0 1 0 11.4"/>',
+    ai: '<path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
+    tokens: '<ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/>',
+    support: '<path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-8l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/>',
+    bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+    db: '<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    warn: '<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17v.01"/>',
+    thumb: '<path d="M7 11v9H4v-9zM7 11l4-8c1.5 0 2.5 1 2.2 2.5L12.5 9H19a2 2 0 0 1 2 2.3l-1 6A2 2 0 0 1 18 19H7"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/>'
+  };
 
   function loadDash(box, quiet) {
     return Promise.all([
       api('/api/admin/stats'),
-      fetch(apiUrl('/api/health')).then(function (r) { return r.json(); }).catch(function () { return { ok: false }; })
+      fetch(apiUrl('/api/health')).then(function (r) { return r.json(); }).catch(function () { return { ok: false }; }),
+      api('/api/admin/users?sort=usage_desc&page=1&page_size=5', { quiet: true }).catch(function () { return { rows: [] }; })
     ]).then(function (rs) {
-      var st = rs[0], hb = rs[1];
+      var st = rs[0];
       ONLINE_MIN = st.online_minutes || ONLINE_MIN;
       lastStatsAt = Date.now();
       $('refreshMeta').textContent = 'آخرین به‌روزرسانی: ' + dt(new Date().toISOString());
       var openSupport = (st.support && st.support.open) || 0;
-      ['supportDot', 'bellDot'].forEach(function (id) { var d = $(id); if (d) d.classList.toggle('hidden', !openSupport); });
-
-      var trend = (st.trend || []).slice().sort(function (a, b) { return new Date(a.day) - new Date(b.day); });
-      var wrap = h('div', { cls: 'dash-wrap' });
-
-      /* ---- Total (area chart) ---- */
-      var tTitle = h('div', { cls: 'p-title' }), tNum = h('span', { cls: 'big-num' }), tDelta = h('span');
-      var tabs = h('div', { cls: 'seg-tabs', role: 'tablist' });
-      var chartHost = h('div'), segRow = h('div', { cls: 'seg-row', 'aria-hidden': 'true' });
-      var avgText = h('span', { cls: 'p-sub' });
-      var tabBtns = {};
-      function renderTotal() {
-        var m = S.dash.metric;
-        var vals = trend.map(function (d) { return Number(d[m]) || 0; });
-        var series = trend.map(function (d, i) { return { label: faDay(d.day), value: vals[i] }; });
-        var label = (DASH_METRICS.filter(function (x) { return x[0] === m; })[0] || [0, ''])[1];
-        tTitle.textContent = label + ' · ' + fa(vals.length) + ' روز اخیر';
-        tNum.textContent = fa(sum(vals));
-        var cur = sum(vals.slice(-7)), prev = sum(vals.slice(-14, -7));
-        tDelta.replaceWith(tDelta = deltaBadge(pctChange(cur, prev)) || h('span'));
-        chartHost.textContent = '';
-        chartHost.appendChild(areaChart(series, { color: '#ff7a2f', height: 250, label: 'روند ' + label }));
-        var avg = vals.length ? sum(vals) / vals.length : 0;
-        segRow.textContent = '';
-        vals.forEach(function (v) { segRow.appendChild(h('span', { cls: 'seg' + (v > avg ? ' hi' : '') })); });
-        avgText.textContent = 'میانگین روزانه: ' + fa(Math.round(avg));
-        Object.keys(tabBtns).forEach(function (k) { tabBtns[k].classList.toggle('active', k === m); tabBtns[k].setAttribute('aria-selected', k === m ? 'true' : 'false'); });
-      }
-      DASH_METRICS.forEach(function (mm) {
-        var b = h('button', { cls: 'seg-tab', type: 'button', role: 'tab', text: mm[1] });
-        on(b, 'click', function () { S.dash.metric = mm[0]; renderTotal(); });
-        tabBtns[mm[0]] = b; tabs.appendChild(b);
-      });
-      var totalPanel = h('div', { cls: 'panel p-total' }, [
-        h('div', { cls: 'p-head' }, [h('div', {}, [tTitle, h('div', { cls: 'big-row' }, [tNum, tDelta])]), tabs]),
-        chartHost, segRow,
-        h('div', { cls: 'p-foot' }, [avgText, h('div', { cls: 'legend' }, [
-          h('span', { cls: 'lg' }, [h('i', { cls: 'sq white' }), 'مقدار روزانه']),
-          h('span', { cls: 'lg' }, [h('i', { cls: 'sq green' }), 'روز بالاتر از میانگین'])
-        ])])
-      ]);
-
-      /* ---- Promo (users) ---- */
-      var signups = st.recent_signups || [];
-      var avatars = h('div', { cls: 'avatars' });
-      signups.slice(0, 3).forEach(function (u) { avatars.appendChild(avatarEl(u.email || u.id)); });
-      avatars.appendChild(h('span', { cls: 'av-plus', text: '+' }));
-      var goUsers = h('button', { cls: 'btn-white btn', type: 'button', text: 'مشاهده کاربران' });
-      on(goUsers, 'click', function () { switchView('users'); });
-      var promo = h('div', { cls: 'panel promo' }, [
-        h('h3', {}, [fa(st.users.total) + ' کاربر', h('span', { text: 'در Unknown AI' })]),
-        h('p', { cls: 'promo-note', text: fa(st.users.online) + ' نفر آنلاین · ' + fa(st.users.new_today) + ' عضو جدید امروز' }),
-        avatars, goUsers
-      ]);
-
-      /* ---- Bars (last 7 days) ---- */
-      var bNum = h('span', { cls: 'big-num' }), bDelta = h('span'), bHost = h('div');
-      var metricSel = h('select', { cls: 'pill-select', 'aria-label': 'معیار نمودار میله‌ای' });
-      BAR_METRICS.forEach(function (o) { metricSel.appendChild(h('option', { value: o[0], text: o[1] })); });
-      metricSel.value = S.dash.bar;
-      var bTitle = h('div', { cls: 'p-title' });
-      function renderBars() {
-        var m = S.dash.bar;
-        var vals = trend.map(function (d) { return Number(d[m]) || 0; });
-        var last = trend.slice(-7);
-        bTitle.textContent = (BAR_METRICS.filter(function (x) { return x[0] === m; })[0] || [0, ''])[1] + ' · ۷ روز اخیر';
-        bNum.textContent = fa(sum(vals.slice(-7)));
-        bDelta.replaceWith(bDelta = deltaBadge(pctChange(sum(vals.slice(-7)), sum(vals.slice(-14, -7)))) || h('span'));
-        bHost.textContent = '';
-        bHost.appendChild(barChart(last.map(function (d) { return { label: faDay(d.day), value: Number(d[m]) || 0 }; })));
-      }
-      on(metricSel, 'change', function () { S.dash.bar = metricSel.value; renderBars(); });
-      var barPanel = h('div', { cls: 'panel p-bars' }, [
-        h('div', { cls: 'p-head' }, [h('div', {}, [bTitle, h('div', { cls: 'big-row' }, [bNum, bDelta])]), metricSel]),
-        bHost
-      ]);
-
-      /* ---- Right column: quick view + recent activity ---- */
-      var totalUsers = Number(st.users.total) || 0, onlineUsers = Number(st.users.online) || 0;
-      var onlinePct = totalUsers ? (onlineUsers / totalUsers) * 100 : 0;
-      var stack = h('div', { cls: 'stack' }, [
-        h('div', { cls: 'sc sc-b2' }, [h('div', { cls: 'sc-row' }, [h('span', { text: 'درخواست‌های AI امروز' }), h('span', { text: fa(st.ai.requests_today) })])]),
-        h('div', { cls: 'sc sc-b1' }, [h('div', { cls: 'sc-row' }, [h('span', { text: 'پیام‌های امروز' }), h('span', { text: fa(st.usage.messages_today) })])]),
-        h('div', { cls: 'sc sc-f' }, [
-          h('div', { cls: 'sc-top' }, [h('span', { cls: 'sc-l', text: 'Unknown AI' }), h('i', { cls: 'chip' })]),
-          h('div', {}, [
-            h('div', { cls: 'sc-note', text: 'کاربران آنلاین' }),
-            h('div', { cls: 'sc-bottom' }, [
-              h('span', { cls: 'sc-val', text: fa(onlineUsers) }),
-              h('span', { cls: 'pill-green', text: onlinePct.toLocaleString('fa-IR', { maximumFractionDigits: 1 }) + '٪ از کل' })
-            ])
-          ])
-        ])
-      ]);
-      var allUsersBtn = h('button', { cls: 'pill-btn', type: 'button', text: 'همه کاربران' });
-      on(allUsersBtn, 'click', function () { switchView('users'); });
-      var supBtn = h('button', { cls: 'btn btn-glass', type: 'button' }, [icon('<path d="M7 7l10 10M17 9v8H9"/>'), 'پشتیبانی' + (openSupport ? ' (' + fa(openSupport) + ')' : '')]);
-      on(supBtn, 'click', function () { switchView('support'); });
-      var repBtn = h('button', { cls: 'btn btn-orange', type: 'button' }, [icon('<path d="M7 17 17 7M9 7h8v8"/>'), 'گزارش‌ها']);
-      on(repBtn, 'click', function () { switchView('reports'); });
-
-      var feed = [];
-      (st.recent_activity || []).forEach(function (a) { feed.push({ who: a.email || a.user_id || '', kind: a.kind, at: a.at }); });
-      (st.recent_errors || []).forEach(function (e) { feed.push({ who: e.email || '', kind: 'error', at: e.at }); });
-      feed.sort(function (a, b) { return new Date(b.at) - new Date(a.at); });
-      var TAGS = { login: ['ورود', 'pos'], message: ['پیام', 'neu'], support: ['پشتیبانی', 'warn'], error: ['خطا', 'neg'] };
-      var feedBox = h('div', { cls: 'feed' });
-      feed.slice(0, 4).forEach(function (f) {
-        var tg = TAGS[f.kind] || [f.kind || '—', 'neu'];
-        var av = avatarEl(f.who, '', f.kind === 'error' ? 'linear-gradient(135deg,#8c2b25,#4d1512)' : null);
-        feedBox.appendChild(h('div', { cls: 'feed-item' }, [
-          av,
-          h('div', { cls: 'feed-main' }, [h('span', { cls: 'feed-name', text: (f.who || '—').slice(0, 28) }), h('span', { cls: 'feed-sub', text: ago(f.at) })]),
-          h('span', { cls: 'tag ' + tg[1], text: tg[0] })
-        ]));
-      });
-      if (!feed.length) feedBox.appendChild(h('div', { cls: 'empty', text: 'فعالیتی ثبت نشده' }));
-      var moreBtn = h('button', { cls: 'link-btn', type: 'button', text: 'مشاهده همه' });
-      on(moreBtn, 'click', function () { switchView('audit'); });
-
-      var right = h('div', { cls: 'panel dash-right' }, [
-        h('div', { cls: 'rp-sec' }, [
-          h('div', { cls: 'rp-head' }, [h('h3', { text: 'نمای سریع' }), allUsersBtn]),
-          stack,
-          h('div', { cls: 'dual' }, [supBtn, repBtn])
-        ]),
-        h('div', { cls: 'rp-sec' }, [h('div', { cls: 'rp-head' }, [h('h3', { text: 'فعالیت‌های اخیر' }), moreBtn]), feedBox])
-      ]);
-
-      wrap.appendChild(h('div', { cls: 'dash' }, [h('div', { cls: 'dash-left' }, [totalPanel, h('div', { cls: 'dash-row' }, [promo, barPanel])]), right]));
-      renderTotal(); renderBars();
-
-      /* ---- KPI strip ---- */
-      var kpis = [
-        kpi('کاربران کل', fa(st.users.total), fa(st.users.confirmed) + ' ایمیل تأییدشده'),
-        kpi('آنلاین (' + fa(ONLINE_MIN) + ' دقیقه اخیر)', fa(st.users.online), 'بر پایه آخرین فعالیت سمت سرور'),
-        kpi('ورودهای جدید امروز', fa(st.users.new_today), 'این هفته: ' + fa(st.users.new_week)),
-        kpi('وضعیت حساب‌ها', fa(st.users.active) + ' / ' + fa(st.users.suspended) + ' / ' + fa(st.users.banned), 'فعال / معلّق / بن'),
-        kpi('گفتگوها', fa(st.content.chats)),
-        kpi('پیام‌ها', fa(st.content.messages), fa(st.content.user_messages) + ' کاربری · ' + fa(st.content.ai_messages) + ' هوش مصنوعی'),
-        kpi('درخواست‌های AI امروز', fa(st.ai.requests_today), 'کل: ' + fa(st.ai.requests_total)),
-        kpi('توکن مصرفی امروز', fa(st.usage.tokens_today), 'هفته: ' + fa(st.usage.tokens_week)),
-        kpi('پیام‌های امروز (سهمیه)', fa(st.usage.messages_today)),
-        kpi('نشست‌های ورود', fa(st.sessions.logins_today), 'امروز · هفته: ' + fa(st.sessions.logins_week)),
-        kpi('خطاهای AI (۲۴ ساعت)', fa(st.ai.failed_24h), st.feedback.up ? 'بازخورد ▲' + fa(st.feedback.up) + ' ▼' + fa(st.feedback.down) : ''),
-        kpi('پشتیبانی باز', fa(st.support.open), 'جدید امروز: ' + fa(st.support.new_today))
-      ];
-      wrap.appendChild(h('div', { cls: 'kpi-grid' }, kpis.map(function (k) { return h('div', { cls: 'kpi-card' }, [k]); })));
-
-      /* ---- Lists + health ---- */
-      function listItem(left, right2) { return h('div', { cls: 'list-item' }, [left, h('span', { cls: 'muted small', text: right2 })]); }
-      var health = card('سلامت سیستم', []);
-      var apiOk = hb && hb.ok && hb.configured;
-      [
-        h('div', { cls: 'list-item' }, [h('span', {}, [h('span', { cls: 'dot ' + (hb && hb.ok ? 'on' : 'off') }), h('span', { text: 'API Worker' })]), h('span', { cls: 'muted small', text: hb && hb.configured ? 'آماده‌به‌کار' : (hb && hb.ok ? 'پیکربندی ناقص' : 'در دسترس نیست') })]),
-        h('div', { cls: 'list-item' }, [h('span', {}, [h('span', { cls: 'dot ' + (st ? 'on' : 'off') }), h('span', { text: 'دسترسی به پایگاه داده' })]), h('span', { cls: 'muted small', text: st ? 'اسنپ‌شات ' + dt(st.generated_at) : '—' })]),
-        h('div', { cls: 'list-item' }, [h('span', { text: 'آخرین درخواست AI' }), h('span', { cls: 'muted small', text: ago(st.ai.last_request_at) })]),
-        h('div', { cls: 'list-item' }, [h('span', { text: 'درخواست‌های ناموفق ۲۴ ساعت' }), h('span', { cls: st.ai.failed_24h > 0 ? 'badge err' : 'muted small', text: fa(st.ai.failed_24h) })]),
-        apiOk ? null : h('p', { cls: 'err-note', text: 'بررسی: در صورت خرابی، وضعیت پیکربندی Worker و اتصال Supabase را بررسی کنید.' })
-      ].forEach(function (x) { if (x) health.appendChild(x); });
-      wrap.appendChild(h('div', { cls: 'grid cols-3' }, [
-        card('تازه‌ترین عضوها', signups.map(function (u) {
-          return listItem(h('span', { cls: 'dir-ltr', text: u.email || u.id }), dOnly(u.created_at));
-        }).concat(signups.length ? [] : [h('div', { cls: 'empty', text: 'کاربری وجود ندارد' })])),
-        card('خطاهای اخیر', (st.recent_errors || []).map(function (e) {
-          return listItem(h('span', { cls: 'dir-ltr', text: (e.email || '').slice(0, 24) + ' · ' + (e.error_code || 'error') }), ago(e.at));
-        }).concat([st.recent_errors && st.recent_errors.length ? null : h('div', { cls: 'empty', text: 'خطایی گزارش نشده ✓' })])),
-        health
-      ]));
-
-      box.textContent = '';
-      box.appendChild(wrap);
+      setSupportBadge(openSupport);
+      dashData = { st: st, hb: rs[1], top: (rs[2] && rs[2].rows) || [] };
+      renderDash(box);
     });
+  }
+  function setSupportBadge(n) {
+    var dot = $('supportDot');
+    if (dot) { dot.textContent = n > 99 ? '۹۹+' : fa(n); dot.classList.toggle('hidden', !n); }
+    var bell = $('bellDot'); if (bell) bell.classList.toggle('hidden', !n);
+  }
+
+  function renderDash(box) {
+    var st = dashData.st, hb = dashData.hb, topRows = dashData.top;
+    var users = st.users || {}, ai = st.ai || {}, usage = st.usage || {}, sup = st.support || {}, content = st.content || {}, sess = st.sessions || {}, fb = st.feedback || {};
+    var trendAll = (st.trend || []).slice().sort(function (a, b) { return new Date(a.day) - new Date(b.day); });
+    var trend = trendAll.slice(-S.dash.range);
+    function series(m, arr) { return (arr || trend).map(function (d) { return Number(d[m]) || 0; }); }
+    function weekDelta(m) { var v = series(m, trendAll); return pctChange(sum(v.slice(-7)), sum(v.slice(-14, -7))); }
+
+    /* ---- filter row ---- */
+    var rangeSel = h('select', { cls: 'pill-select', 'aria-label': 'بازه زمانی نمودار' });
+    RANGES.forEach(function (r) { rangeSel.appendChild(h('option', { value: String(r[0]), text: r[1] })); });
+    rangeSel.value = String(S.dash.range);
+    on(rangeSel, 'change', function () { S.dash.range = Number(rangeSel.value); renderDash(box); });
+    var filters = h('div', { cls: 'filters' }, [
+      rangeSel,
+      h('span', { cls: 'filters-spacer' }),
+      h('span', { cls: 'live', title: 'هر ۶۰ ثانیه خودکار به‌روز می‌شود' }, [h('i'), 'زنده · به‌روزرسانی خودکار'])
+    ]);
+
+    /* ---- KPI cards ---- */
+    function kcard(o) {
+      return h('div', { cls: 'kcard' }, [
+        h('div', { cls: 'kc-top' }, [h('span', { cls: 'kc-label', text: o.label }), h('span', { cls: 'kc-ico' }, [icon(o.icon)])]),
+        h('div', { cls: 'kc-val' + (o.hot ? ' hot' : ''), text: o.value }),
+        h('div', { cls: 'kc-foot' }, [o.delta || null, h('span', { text: o.caption || '' })])
+      ]);
+    }
+    var kpis = h('div', { cls: 'kpi5' }, [
+      kcard({ label: 'کاربران کل', icon: IC.users, value: fa(users.total), delta: deltaBadge(weekDelta('signups')), caption: fa(users.new_week) + ' عضو جدید این هفته' }),
+      kcard({ label: 'آنلاین الان', icon: IC.online, value: fa(users.online), caption: 'در ' + fa(ONLINE_MIN) + ' دقیقه اخیر' }),
+      kcard({ label: 'درخواست‌های AI امروز', icon: IC.ai, value: fa(ai.requests_today), delta: deltaBadge(weekDelta('requests')), caption: 'کل: ' + fa(ai.requests_total) }),
+      kcard({ label: 'توکن مصرفی امروز', icon: IC.tokens, value: fa(usage.tokens_today), delta: deltaBadge(weekDelta('tokens')), caption: 'این هفته: ' + fa(usage.tokens_week) }),
+      kcard({ label: 'پشتیبانی باز', icon: IC.support, value: fa(sup.open), hot: sup.open > 0, caption: 'جدید امروز: ' + fa(sup.new_today) })
+    ]);
+
+    /* ---- main chart ---- */
+    var tabs = h('div', { cls: 'seg-tabs', role: 'tablist' }), tabBtns = {};
+    var titleEl = h('h3', { cls: 'p-title' }), note = h('div', { cls: 'panel-note' });
+    var stats = h('div', { cls: 'mini-stats' }), plot = h('div', { cls: 'plot' });
+    function mini(label, value, delta) {
+      return h('div', { cls: 'mini' }, [h('div', { cls: 'mini-l', text: label }), h('div', { cls: 'mini-row' }, [h('div', { cls: 'mini-v', text: value }), delta || null])]);
+    }
+    function renderTotal() {
+      var m = S.dash.metric;
+      var meta = DASH_METRICS.filter(function (x) { return x[0] === m; })[0] || [m, m];
+      var vals = series(m), all = series(m, trendAll);
+      titleEl.textContent = meta[1] + ' · روزانه';
+      var avg = vals.length ? sum(vals) / vals.length : 0;
+      var peak = Math.max.apply(null, vals.concat([0])), pi = vals.indexOf(peak);
+      note.textContent = '';
+      note.appendChild(icon(IC.info));
+      note.appendChild(h('span', { text: 'میانگین روزانه ' + fa(Math.round(avg)) + (peak > 0 ? ' · اوج در ' + faDay(trend[pi].day) + ' (' + fa(peak) + ')' : '') }));
+      stats.textContent = '';
+      var last = vals.length ? vals[vals.length - 1] : 0;
+      stats.appendChild(mini('آخرین روز', fa(last), vals.length > 1 ? deltaBadge(pctChange(last, vals[vals.length - 2])) : null));
+      stats.appendChild(mini('۷ روز اخیر', fa(sum(all.slice(-7))), deltaBadge(weekDelta(m))));
+      stats.appendChild(mini('کل بازه (' + fa(vals.length) + ' روز)', fa(sum(vals)), null));
+      plot.textContent = '';
+      plot.appendChild(vBars(trend.map(function (d) { return { label: faDay(d.day), value: Number(d[m]) || 0 }; })));
+      Object.keys(tabBtns).forEach(function (k) { tabBtns[k].classList.toggle('active', k === m); tabBtns[k].setAttribute('aria-selected', k === m ? 'true' : 'false'); });
+    }
+    DASH_METRICS.forEach(function (mm) {
+      var b = h('button', { cls: 'seg-tab', type: 'button', role: 'tab', text: mm[1] });
+      on(b, 'click', function () { S.dash.metric = mm[0]; renderTotal(); });
+      tabBtns[mm[0]] = b; tabs.appendChild(b);
+    });
+    var mainPanel = h('div', { cls: 'panel p-main' }, [
+      h('div', { cls: 'p-head' }, [h('div', {}, [titleEl, note]), tabs]),
+      h('div', { cls: 'exp-body' }, [stats, plot])
+    ]);
+
+    /* ---- side card: account status donut ---- */
+    var act = Number(users.active) || 0, susp = Number(users.suspended) || 0, ban = Number(users.banned) || 0;
+    var signups = st.recent_signups || [];
+    var sideKids = [
+      h('div', { cls: 'p-head' }, [h('div', {}, [h('h3', { cls: 'p-title', text: 'وضعیت حساب‌ها' }), h('div', { cls: 'p-sub muted small', text: fa(users.confirmed) + ' ایمیل تأییدشده' })])]),
+      h('div', { cls: 'dn-wrap' }, [
+        donut([{ value: act, color: 'var(--good)' }, { value: susp, color: 'var(--warn)' }, { value: ban, color: 'var(--bad)' }], fa(act + susp + ban), 'کاربر'),
+        h('div', { cls: 'legend' }, [
+          h('div', { cls: 'lg' }, [h('i', { style: 'background:var(--good)' }), 'فعال', h('b', { text: fa(act) })]),
+          h('div', { cls: 'lg' }, [h('i', { style: 'background:var(--warn)' }), 'معلّق', h('b', { text: fa(susp) })]),
+          h('div', { cls: 'lg' }, [h('i', { style: 'background:var(--bad)' }), 'بن‌شده', h('b', { text: fa(ban) })])
+        ])
+      ])
+    ];
+    if (signups.length) {
+      var nu = signups[0];
+      var nb = h('button', { cls: 'newest', type: 'button', title: 'نمایش کاربر' }, [
+        avatarEl(nu.email || nu.id),
+        h('div', { cls: 'newest-main' }, [h('b', { cls: 'dir-ltr', text: nu.email || String(nu.id).slice(0, 8) }), h('span', { text: 'تازه‌ترین عضو · ' + ago(nu.created_at) })])
+      ]);
+      if (nu.id) on(nb, 'click', function () { openUser(nu.id); });
+      sideKids.push(nb);
+    }
+    var sidePanel = h('div', { cls: 'panel p-side' }, sideKids);
+
+    /* ---- three lists ---- */
+    var feed = [];
+    (st.recent_activity || []).forEach(function (a) { feed.push({ who: a.email || a.user_id || '', kind: a.kind, at: a.at }); });
+    (st.recent_errors || []).forEach(function (e) { feed.push({ who: e.email || '', kind: 'error', at: e.at }); });
+    feed.sort(function (a, b) { return new Date(b.at) - new Date(a.at); });
+    var KIND = { login: ['ورود به سیستم', 'ok', '<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 8l-4 4 4 4M6 12h10"/>'], message: ['پیام جدید', '', IC.support], support: ['درخواست پشتیبانی', 'warn', IC.support], error: ['خطای AI', 'hot', IC.warn] };
+    var feedBox = h('div', { cls: 'feed' });
+    feed.slice(0, 5).forEach(function (f) {
+      var k = KIND[f.kind] || [f.kind || '—', '', IC.clock];
+      feedBox.appendChild(h('div', { cls: 'li' }, [
+        h('span', { cls: 'li-ico ' + k[1] }, [icon(k[2])]),
+        h('div', { cls: 'li-main' }, [h('span', { cls: 'li-title', text: k[0] }), h('span', { cls: 'li-sub dir-ltr', text: (f.who || '—').slice(0, 30) })]),
+        h('span', { cls: 'li-chip', text: ago(f.at) })
+      ]));
+    });
+    if (!feed.length) feedBox.appendChild(h('div', { cls: 'empty', text: 'فعالیتی ثبت نشده' }));
+    var moreBtn = h('button', { cls: 'link-btn', type: 'button', text: 'مشاهده همه' });
+    on(moreBtn, 'click', function () { switchView('audit'); });
+    var feedCard = h('div', { cls: 'panel' }, [h('div', { cls: 'rp-head' }, [h('h3', { text: 'فعالیت‌های اخیر' }), moreBtn]), feedBox]);
+
+    var topBox = h('div', { cls: 'stack' });
+    topRows.slice(0, 5).forEach(function (u) {
+      var b = h('button', { cls: 'li', type: 'button' }, [
+        avatarEl(u.email || u.id),
+        h('div', { cls: 'li-main' }, [h('span', { cls: 'li-title dir-ltr', text: u.email || String(u.id).slice(0, 8) }), h('span', { cls: 'li-sub', text: fa(u.messages_count) + ' پیام · ' + (ago(u.last_activity) || '—') })]),
+        h('span', { cls: 'li-val', text: compact(u.today_tokens) + ' توکن' })
+      ]);
+      on(b, 'click', function () { openUser(u.id); });
+      topBox.appendChild(b);
+    });
+    if (!topRows.length) topBox.appendChild(h('div', { cls: 'empty', text: 'داده‌ای نیست' }));
+    var allBtn = h('button', { cls: 'link-btn', type: 'button', text: 'همه کاربران' });
+    on(allBtn, 'click', function () { switchView('users'); });
+    var topCard = h('div', { cls: 'panel' }, [h('div', { cls: 'rp-head' }, [h('h3', { text: 'پرمصرف‌ترین کاربران' }), allBtn]), topBox]);
+
+    var apiUp = !!(hb && hb.ok), apiReady = !!(hb && hb.ok && hb.configured);
+    function hrow(ico, tone, label, value, vtone) {
+      return h('div', { cls: 'li' }, [
+        h('span', { cls: 'li-ico ' + tone }, [icon(ico)]),
+        h('div', { cls: 'li-main' }, [h('span', { cls: 'li-title', text: label })]),
+        h('span', { cls: 'li-val' + (vtone ? ' tone-' + vtone : ''), text: value })
+      ]);
+    }
+    var failed = Number(ai.failed_24h) || 0;
+    var healthBox = h('div', { cls: 'stack' }, [
+      hrow(IC.bolt, apiReady ? 'ok' : (apiUp ? 'warn' : 'hot'), 'API Worker', apiReady ? 'آماده‌به‌کار' : (apiUp ? 'پیکربندی ناقص' : 'در دسترس نیست'), apiReady ? 'good' : (apiUp ? 'warn' : 'bad')),
+      hrow(IC.db, 'ok', 'پایگاه داده', dt(st.generated_at), ''),
+      hrow(IC.clock, '', 'آخرین درخواست AI', ago(ai.last_request_at) || '—', ''),
+      hrow(IC.warn, failed > 0 ? 'hot' : 'ok', 'خطاهای ۲۴ ساعت', fa(failed), failed > 0 ? 'bad' : 'good'),
+      hrow(IC.thumb, '', 'بازخورد کاربران', '▲ ' + fa(fb.up) + '  ▼ ' + fa(fb.down), ''),
+      apiReady ? null : h('p', { cls: 'err-note', text: 'اگر خرابی دارید، پیکربندی Worker و اتصال Supabase را بررسی کنید.' })
+    ].filter(Boolean));
+    var healthCard = h('div', { cls: 'panel' }, [h('div', { cls: 'rp-head' }, [h('h3', { text: 'سلامت سیستم' })]), healthBox]);
+
+    /* ---- extra stats ---- */
+    function mi(l, v, s) { return h('div', { cls: 'more-i' }, [h('div', { cls: 'l', text: l }), h('div', { cls: 'v', text: v }), s ? h('div', { cls: 's', text: s }) : null]); }
+    var more = h('div', { cls: 'panel' }, [
+      h('div', { cls: 'rp-head' }, [h('h3', { text: 'آمار تکمیلی' })]),
+      h('div', { cls: 'more' }, [
+        mi('گفتگوها', fa(content.chats)),
+        mi('کل پیام‌ها', fa(content.messages), fa(content.user_messages) + ' کاربر · ' + fa(content.ai_messages) + ' هوش مصنوعی'),
+        mi('پیام‌های امروز', fa(usage.messages_today)),
+        mi('ورودهای امروز', fa(sess.logins_today), 'این هفته: ' + fa(sess.logins_week)),
+        mi('عضویت امروز', fa(users.new_today), 'این هفته: ' + fa(users.new_week)),
+        mi('خطاهای AI (۲۴ ساعت)', fa(ai.failed_24h))
+      ])
+    ]);
+
+    var wrap = h('div', { cls: 'dash-wrap' }, [filters, kpis, h('div', { cls: 'dash-grid' }, [mainPanel, sidePanel]), h('div', { cls: 'tri' }, [feedCard, topCard, healthCard]), more]);
+    box.textContent = '';
+    box.appendChild(wrap);
+    renderTotal();
   }
 
   // ---------- users ----------
   var USORTS = { created_desc: 'جدیدترین', created_asc: 'قدیمی‌ترین', activity_desc: 'آخرین فعالیت', usage_desc: 'بیشترین پیام' };
   var USTATUSES = { '': 'همه', online: 'آنلاین', active: 'فعال', suspended: 'معلّق', banned: 'بن', unconfirmed: 'بدون تأیید ایمیل' };
 
-  function usersToolbar() {
-    var q = h('input', { type: 'search', placeholder: 'جستجوی ایمیل / شماره / شناسه…', value: S.users.q });
-    var status = h('select');
-    Object.keys(USTATUSES).forEach(function (k) { status.appendChild(h('option', { value: k, text: USTATUSES[k] })); });
-    status.value = S.users.status;
-    var sort = h('select');
+  /** Built once per visit: typing / chip clicks only refresh the results area, so focus is never lost. */
+  function usersToolbar(refresh) {
+    var q = h('input', { type: 'search', placeholder: 'جستجوی ایمیل / شماره / شناسه…', value: S.users.q, 'aria-label': 'جستجوی کاربران', autocomplete: 'off' });
+    var field = h('label', { cls: 'field-search' }, [icon('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/>'), q]);
+    var chips = h('div', { cls: 'chips', role: 'group', 'aria-label': 'فیلتر وضعیت' });
+    var chipEls = {};
+    Object.keys(USTATUSES).forEach(function (k) {
+      var b = h('button', { cls: 'chip' + (S.users.status === k ? ' on' : ''), type: 'button', text: USTATUSES[k], 'aria-pressed': S.users.status === k ? 'true' : 'false' });
+      on(b, 'click', function () {
+        S.users.status = k;
+        Object.keys(chipEls).forEach(function (x) { chipEls[x].classList.toggle('on', x === k); chipEls[x].setAttribute('aria-pressed', x === k ? 'true' : 'false'); });
+        refresh();
+      });
+      chipEls[k] = b; chips.appendChild(b);
+    });
+    var sort = h('select', { 'aria-label': 'مرتب‌سازی' });
     Object.keys(USORTS).forEach(function (k) { sort.appendChild(h('option', { value: k, text: USORTS[k] })); });
     sort.value = S.users.sort;
-    var exportBtn = h('button', { cls: 'btn btn-ghost btn-sm', text: 'خروجی CSV' });
-    on(q, 'keydown', function (e) { if (e.key === 'Enter') { S.users.q = q.value; S.users.page = 1; loadUsers(); } });
-    on(status, 'change', function () { S.users.status = status.value; S.users.page = 1; loadUsers(); });
-    on(sort, 'change', function () { S.users.sort = sort.value; S.users.page = 1; loadUsers(); });
+    var exportBtn = h('button', { cls: 'btn btn-sm', type: 'button', text: 'خروجی CSV' });
+    var timer;
+    on(q, 'input', function () { clearTimeout(timer); timer = setTimeout(function () { S.users.q = q.value.trim(); refresh(); }, 320); });
+    on(q, 'keydown', function (e) { if (e.key === 'Enter') { clearTimeout(timer); S.users.q = q.value.trim(); refresh(); } });
+    on(sort, 'change', function () { S.users.sort = sort.value; refresh(); });
     on(exportBtn, 'click', exportUsers);
-    return h('div', { cls: 'toolbar' }, [q, status, sort, exportBtn]);
+    return h('div', { cls: 'detail-head' }, [h('div', { cls: 'toolbar' }, [field, sort, exportBtn]), chips]);
   }
 
   function exportUsers() {
@@ -844,16 +944,27 @@
     return h('div', { cls: 'pager' }, [prev, h('span', { cls: 'muted', text: 'صفحه ' + fa(st.page) + ' از ' + fa(pages) + ' · ' + fa(st.total || 0) + ' نتیجه' }), next]);
   }
 
+  var usersReq = 0;
   function loadUsers(box) {
     box = box || $('view-users');
     box.textContent = '';
-    box.appendChild(usersToolbar());
-    var wrap = h('div', { cls: 'tbl-wrap' });
-    box.appendChild(wrap);
+    var results = h('div', { cls: 'results' });
+    box.appendChild(usersToolbar(function () { S.users.page = 1; return fetchUsers(results); }));
+    box.appendChild(results);
+    return fetchUsers(results);
+  }
+  function fetchUsers(results) {
+    var req = ++usersReq;
+    results.textContent = '';
+    var sk = skeleton('list'); results.appendChild(sk);
     var params = new URLSearchParams({ q: S.users.q, status: S.users.status, sort: S.users.sort, page: String(S.users.page), page_size: String(S.users.size) });
     return api('/api/admin/users?' + params.toString()).then(function (d) {
+      if (req !== usersReq) return; // a newer search is already running
+      results.textContent = '';
       var rows = d.rows || [];
       S.users.total = d.total || 0;
+      var wrap = h('div', { cls: 'tbl-wrap' });
+      results.appendChild(wrap);
       if (!rows.length) { wrap.appendChild(h('div', { cls: 'empty', text: 'کاربری با این فیلترها پیدا نشد.' })); }
       else {
         var table = h('table');
@@ -864,8 +975,9 @@
         var tb = h('tbody');
         rows.forEach(function (u) {
           var online = u.last_activity && (Date.now() - new Date(u.last_activity).getTime() < ONLINE_MIN * 60000);
-          var tr = h('tr', { cls: 'clickable' }, [
-            h('td', {}, [h('span', { cls: 'dot ' + (online ? 'on' : 'off') }), h('span', { cls: 'dir-ltr', text: u.email || String(u.id).slice(0, 8) }), u.phone ? h('div', { cls: 'muted small dir-ltr', text: u.phone }) : null]),
+          var who = u.email || String(u.id).slice(0, 8);
+          var tr = h('tr', { cls: 'clickable', tabindex: '0' }, [
+            h('td', {}, [h('div', { cls: 'cell-user' }, [avatarEl(who), h('div', {}, [h('div', {}, [h('span', { cls: 'dot ' + (online ? 'on' : 'off'), title: online ? 'آنلاین' : '' }), h('span', { cls: 'dir-ltr', text: who })]), u.phone ? h('div', { cls: 'muted small dir-ltr', text: u.phone }) : null])])]),
             h('td', {}, [badge(u.admin_status)]),
             h('td', { text: dOnly(u.created_at) }),
             h('td', {}, [h('span', { text: ago(u.last_activity) || '—' }), h('div', { cls: 'muted small', text: online ? 'آنلاین' : '' })]),
@@ -874,13 +986,14 @@
             h('td', { text: fa(u.today_messages) + ' / ' + fa(u.today_tokens) })
           ]);
           on(tr, 'click', function () { openUser(u.id); });
+          on(tr, 'keydown', function (e) { if (e.key === 'Enter') openUser(u.id); });
           tb.appendChild(tr);
         });
         table.appendChild(tb);
-        wrap.appendChild(table);
+        wrap.appendChild(labelTable(table));
       }
-      box.appendChild(pagerRow(S.users, function (p) { S.users.page = p; loadUsers(); }));
-    }).catch(function () { wrap.appendChild(h('div', { cls: 'empty', text: 'بارگذاری ناموفق.' })); });
+      results.appendChild(pagerRow(S.users, function (p) { S.users.page = p; fetchUsers(results); window.scrollTo({ top: 0, behavior: 'smooth' }); }));
+    }).catch(function () { if (req === usersReq) { results.textContent = ''; results.appendChild(h('div', { cls: 'empty', text: 'بارگذاری ناموفق.' })); } });
   }
 
   // ---------- user detail ----------
@@ -897,7 +1010,7 @@
   function loadUser(box) {
     box = box || $('view-user');
     box.textContent = '';
-    var back = h('button', { cls: 'btn btn-ghost btn-sm', text: '← بازگشت به کاربران' });
+    var back = h('button', { cls: 'btn btn-ghost btn-sm', text: '→ بازگشت به کاربران', style: 'align-self:flex-start' });
     on(back, 'click', function () { switchView('users'); });
     var head = h('div', { cls: 'detail-head' }, [h('div', { cls: 'empty', text: '…' })]);
     box.append(back, head);
@@ -926,8 +1039,13 @@
         infoItem('مرورگر / دستگاه / IP', 'جمع‌آوری نمی‌شود (حریم خصوصی)')
       ]);
       var left = h('div', {}, [
-        h('div', { cls: 'toolbar' }, [badge(u.admin_status), u.admin_role ? h('span', { cls: 'role-badge', text: roleLabel(u.admin_role) }) : null]),
-        h('h2', { text: u.email || u.id, cls: 'small muted dir-ltr' }),
+        h('div', { cls: 'profile-head' }, [
+          avatarEl(u.email || u.id),
+          h('div', {}, [
+            h('h2', { text: u.email || u.id, cls: 'dir-ltr' }),
+            h('div', { cls: 'toolbar' }, [badge(u.admin_status), u.admin_role ? h('span', { cls: 'role-badge', text: roleLabel(u.admin_role) }) : null, online ? h('span', { cls: 'badge active', text: 'آنلاین' }) : null])
+          ])
+        ]),
         info
       ]);
       var actions = h('div', { cls: 'actions-row' });
@@ -987,7 +1105,7 @@
       function () {
         return api('/api/admin/users/ban', { method: 'POST', body: { user_id: id, ban: doBan } })
           .then(function () { toast(doBan ? 'کاربر بن شد.' : 'بن برداشته شد.', true); loadUser(); });
-      });
+      }, doBan);
   }
 
   function quotaModal(u) {
@@ -1030,9 +1148,9 @@
           tb.appendChild(tr);
         });
         var t = h('table', {}, [h('thead', {}, [h('tr', {}, [h('th', { text: 'عنوان' }), h('th', { text: 'پیام‌ها' }), h('th', { text: 'تاریخ' })])]), tb]);
-        box.appendChild(t);
+        box.appendChild(h('div', { cls: 'tbl-wrap' }, [labelTable(t)]));
       } else if (st.tab === 'messages') {
-        var backBtn = h('button', { cls: 'btn btn-ghost btn-sm', text: '← گفتگوها' });
+        var backBtn = h('button', { cls: 'btn btn-ghost btn-sm', text: '→ گفتگوها' });
         on(backBtn, 'click', function () { st.tab = 'chats'; st.page = 1; loadUserContent(box); });
         box.appendChild(backBtn);
         box.appendChild(h('h3', { text: 'محتوای گفتگو (فقط برای مدیران؛ محرمانه)', cls: 'small muted' }));
@@ -1080,8 +1198,9 @@
     return api('/api/admin/support?' + params.toString()).then(function (d) {
       var rows = d.rows || [];
       if (!rows.length) { listBox.appendChild(h('div', { cls: 'empty', text: 'درخواستی نیست.' })); return; }
+      var els = [];
       rows.forEach(function (t) {
-        var el = h('div', { cls: 'thread' + (S.support.threadId === t.thread_id ? ' sel' : '') }, [
+        var el = h('div', { cls: 'thread' + (S.support.threadId === t.thread_id ? ' sel' : ''), tabindex: '0', role: 'button' }, [
           h('div', { cls: 'list-item' }, [
             h('b', { text: t.subject || '(بدون موضوع)' }),
             badge(t.status)
@@ -1089,7 +1208,15 @@
           h('div', { cls: 'muted small dir-ltr', text: t.email || '' }),
           h('div', { cls: 'muted small', text: fa(t.message_count) + ' پیام · ' + ago(t.updated_at) })
         ]);
-        on(el, 'click', function () { S.support.threadId = t.thread_id; loadSupport(); });
+        function pick() {
+          S.support.threadId = t.thread_id;
+          els.forEach(function (x) { x.classList.toggle('sel', x === el); });
+          renderThread(threadBox, t.thread_id);   // only the conversation reloads; the list keeps its scroll position
+          if (window.innerWidth <= 1000) threadBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        on(el, 'click', pick);
+        on(el, 'keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+        els.push(el);
         listBox.appendChild(el);
       });
       listBox.appendChild(pagerRow({ page: S.support.page, size: 20, total: d.total }, function (p) { S.support.page = p; loadSupport(); }));
@@ -1127,7 +1254,8 @@
               .then(function () { toast('بسته شد.', true); loadSupport(); });
           });
         });
-        box.appendChild(h('div', { cls: 'reply-box' }, [ta, h('div', {}, [send, h('div', { style: 'height:6px' }), closeBtn])]));
+        on(ta, 'keydown', function (e) { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') send.click(); });
+        box.appendChild(h('div', { cls: 'reply-box' }, [ta, h('div', { cls: 'reply-actions' }, [send, closeBtn])]));
       }
     }).catch(function () { box.textContent = ''; box.appendChild(h('div', { cls: 'empty', text: 'بارگذاری ناموفق.' })); });
   }
@@ -1140,9 +1268,9 @@
       function ser(k) { return trend.map(function (d) { return { label: faDay(d.day), value: Number(d[k]) || 0 }; }); }
       box.append(
         h('div', { cls: 'grid chart-grid' }, [
-          card('پیام‌های روزانه (۱۴ روز)', [areaChart(ser('messages'), { color: '#ff7a2f', height: 230 })]),
-          card('توکن مصرفی روزانه', [areaChart(ser('tokens'), { color: '#ffb454', height: 230 })]),
-          card('کاربران جدید', [areaChart(ser('signups'), { color: '#4fe3a1', height: 230 })]),
+          card('پیام‌های روزانه (' + fa(trend.length) + ' روز)', [areaChart(ser('messages'), { color: 'var(--c1)', height: 230 })]),
+          card('توکن مصرفی روزانه', [areaChart(ser('tokens'), { color: 'var(--c2)', height: 230 })]),
+          card('کاربران جدید', [areaChart(ser('signups'), { color: 'var(--c3)', height: 230 })]),
           card('جمع‌بندی', [
             h('div', { cls: 'list-item' }, [h('span', { text: 'کل پیام‌ها' }), h('span', { text: fa(st.content.messages) })]),
             h('div', { cls: 'list-item' }, [h('span', { text: 'کل درخواست‌های AI' }), h('span', { text: fa(st.ai.requests_total) })]),
@@ -1161,7 +1289,8 @@
         (d.rows || []).forEach(function (u) {
           tb.appendChild(h('tr', {}, [h('td', { cls: 'dir-ltr', text: u.email || u.id }), h('td', { text: fa(u.messages_count) + ' پیام' }), h('td', { text: fa(u.today_tokens) + ' توکن امروز' })]));
         });
-        topWrap.appendChild(h('table', {}, [tb]));
+        var tt = h('table', {}, [h('thead', {}, [h('tr', {}, [h('th', { text: 'کاربر' }), h('th', { text: 'پیام‌ها' }), h('th', { text: 'امروز' })])]), tb]);
+        topWrap.appendChild(h('div', { cls: 'tbl-wrap' }, [labelTable(tt)]));
         if (!(d.rows || []).length) topWrap.appendChild(h('div', { cls: 'empty', text: 'داده‌ای نیست.' }));
       });
     });
@@ -1190,7 +1319,7 @@
             h('td', {}, [h('span', { cls: 'badge ' + (r.outcome === 'fail' ? 'err' : 'active'), text: r.outcome === 'fail' ? 'ناموفق' : 'موفق' })])
           ]));
         });
-        wrap.appendChild(h('table', {}, [h('thead', {}, [h('tr', {}, [h('th', { text: 'زمان' }), h('th', { text: 'اقدام' }), h('th', { text: 'عامل' }), h('th', { text: 'هدف' }), h('th', { text: 'جزئیات' }), h('th', { text: 'نتیجه' })])]), tb]));
+        wrap.appendChild(labelTable(h('table', {}, [h('thead', {}, [h('tr', {}, [h('th', { text: 'زمان' }), h('th', { text: 'اقدام' }), h('th', { text: 'عامل' }), h('th', { text: 'هدف' }), h('th', { text: 'جزئیات' }), h('th', { text: 'نتیجه' })])]), tb])));
       }
       box.appendChild(pagerRow({ page: S.audit.page, size: S.audit.size, total: d.total }, function (p) { S.audit.page = p; loadAudit(); }));
     });
@@ -1251,7 +1380,7 @@
         on(rmBtn, 'click', function () {
           askModal('حذف دسترسی', h('p', { text: 'دسترسی مدیریتی «' + (m.email || m.user_id) + '» کاملاً حذف شود؟' }), 'حذف', function () {
             return api('/api/admin/members', { method: 'POST', body: { user_id: m.user_id, role: null } }).then(function () { toast('حذف شد.', true); loadAdmins(); });
-          });
+          }, true);
         });
         tb.appendChild(h('tr', {}, [
           h('td', { cls: 'dir-ltr', text: m.email || m.user_id }),
@@ -1261,7 +1390,7 @@
           h('td', {}, [change, saveBtn, rmBtn])
         ]));
       });
-      listBox.appendChild(h('div', { cls: 'tbl-wrap' }, [h('table', {}, [h('thead', {}, [h('tr', {}, [h('th', { text: 'ایمیل' }), h('th', { text: 'نقش' }), h('th', { text: 'افزوده‌شده' }), h('th', { text: 'توسط' }), h('th', { text: 'عملیات' })])]), tb])]));
+      listBox.appendChild(h('div', { cls: 'tbl-wrap' }, [labelTable(h('table', {}, [h('thead', {}, [h('tr', {}, [h('th', { text: 'ایمیل' }), h('th', { text: 'نقش' }), h('th', { text: 'افزوده‌شده' }), h('th', { text: 'توسط' }), h('th', { text: 'عملیات' })])]), tb]))]));
     });
   }
 
@@ -1301,7 +1430,12 @@
     on($('refreshBtn'), 'click', function () { load(S.view); });
     on($('bellBtn'), 'click', function () { switchView('support'); });
     var gs = $('globalSearch');
-    function focusSearch() { if (gs && gs.offsetParent !== null) { gs.focus(); gs.select(); } else switchView('users'); }
+    function focusSearch() {
+      var uf = document.querySelector('#view-users .field-search input');
+      if (gs && gs.offsetParent !== null) { gs.focus(); gs.select(); }
+      else if (uf && uf.offsetParent !== null) { uf.focus(); uf.select(); }
+      else switchView('users');
+    }
     on($('kbdHint'), 'click', focusSearch);
     on(gs, 'keydown', function (e) {
       if (e.key !== 'Enter') return;
@@ -1312,10 +1446,35 @@
     });
     document.addEventListener('keydown', function (e) {
       if ((e.metaKey || e.ctrlKey) && String(e.key).toLowerCase() === 'k' && !$('app').classList.contains('hidden')) { e.preventDefault(); focusSearch(); }
-      if (e.key === 'Escape') document.body.classList.remove('nav-open');
+      if (e.key === 'Escape') {
+        document.body.classList.remove('nav-open');
+        if (!$('modalWrap').classList.contains('hidden')) closeModal();
+      }
     });
     on($('menuBtn'), 'click', function () { document.body.classList.toggle('nav-open'); });
-    on($('modalWrap'), 'click', function (e) { if (e.target === $('modalWrap')) $('modalWrap').classList.add('hidden'); });
+    on($('scrim'), 'click', function () { document.body.classList.remove('nav-open'); });
+    on($('modalWrap'), 'click', function (e) { if (e.target === $('modalWrap')) closeModal(); });
+
+    // theme (light / dark) — saved per browser; theme-init.js applies it before first paint
+    Array.prototype.forEach.call(document.querySelectorAll('[data-theme-toggle]'), function (b) { on(b, 'click', toggleTheme); });
+    // collapsible sidebar (desktop)
+    var col = $('sideCollapse');
+    if (col) {
+      col.setAttribute('aria-expanded', document.documentElement.classList.contains('side-collapsed') ? 'false' : 'true');
+      on(col, 'click', function () {
+        var c = document.documentElement.classList.toggle('side-collapsed');
+        col.setAttribute('aria-expanded', c ? 'false' : 'true');
+        try { localStorage.setItem('adm-side', c ? 'collapsed' : 'open'); } catch (e) {}
+      });
+    }
+  }
+  function toggleTheme() {
+    var root = document.documentElement;
+    var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('adm-theme', next); } catch (e) {}
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.setAttribute('content', next === 'dark' ? '#0b0b0c' : '#e9e9eb');
   }
 
   bindAuth();

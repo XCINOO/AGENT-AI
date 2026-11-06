@@ -1,15 +1,17 @@
 <!doctype html>
-<html lang="fa" dir="rtl">
+<html lang="fa" dir="rtl" data-theme="light">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.workers.dev https://s422nb.bot-keep.xyz https://unknown-ai-backend-production.up.railway.app; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#0e0a08">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#e9e9eb">
 <title>پنل مدیریت Unknown AI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="./theme-init.js"></script>
 <link rel="stylesheet" href="./admin.css">
 </head>
 <body>
@@ -19,31 +21,35 @@
 </div>
 
 <section id="auth" class="screen hidden" aria-label="ورود مدیر">
+  <button class="icon-btn screen-theme" type="button" data-theme-toggle aria-label="تغییر تم روشن/تاریک" title="تغییر تم">
+    <svg class="ni ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>
+    <svg class="ni ico-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>
+  </button>
   <div class="auth-card">
-    <div class="auth-logo"><img src="./assets/logo.png" alt="Unknown AI" width="168" height="113"></div>
+    <div class="auth-logo"><img class="logo-img" src="./assets/logo-mark.png" alt="Unknown AI" width="356" height="36"></div>
     <h1>پنل مدیریت</h1>
     <p class="auth-sub">فقط حساب‌های مجاز مدیریتی می‌توانند وارد شوند.</p>
-    <div class="auth-tabs">
-      <button class="authtab active" id="tabPassword" type="button">رمز عبور</button>
-      <button class="authtab" id="tabOtp" type="button">کد یک‌بار‌مصرف</button>
+    <div class="auth-tabs" role="tablist">
+      <button class="authtab active" id="tabPassword" type="button" role="tab">رمز عبور</button>
+      <button class="authtab" id="tabOtp" type="button" role="tab">کد یک‌بار‌مصرف</button>
     </div>
     <div id="passStep">
       <label for="admUser" class="sr-only">نام کاربری یا ایمیل مدیر</label>
       <input id="admUser" type="text" autocomplete="username" spellcheck="false" autocapitalize="none" class="dir-ltr" maxlength="320" placeholder="نام کاربری مدیر">
       <label for="admPass" class="sr-only">رمز عبور</label>
       <input id="admPass" type="password" autocomplete="current-password" class="dir-ltr" maxlength="256" placeholder="رمز عبور">
-      <button id="admPassIn" class="btn btn-primary">ورود</button>
+      <button id="admPassIn" class="btn btn-primary btn-wide">ورود</button>
     </div>
     <div id="emailStep" class="hidden">
       <label for="admEmail" class="sr-only">ایمیل</label>
-      <input id="admEmail" type="email" autocomplete="email" inputmode="email" placeholder="ایمیل مدیر">
-      <button id="admSendOtp" class="btn btn-primary">ارسال کد ورود</button>
+      <input id="admEmail" type="email" autocomplete="email" inputmode="email" class="dir-ltr" placeholder="ایمیل مدیر">
+      <button id="admSendOtp" class="btn btn-primary btn-wide">ارسال کد ورود</button>
     </div>
     <div id="otpStep" class="hidden">
       <label for="admOtp" class="sr-only">کد ۶ رقمی</label>
       <input id="admOtp" class="otp" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code">
-      <button id="admVerifyOtp" class="btn btn-primary">تأیید و ورود</button>
-      <button id="admBack" class="btn btn-ghost">بازگشت</button>
+      <button id="admVerifyOtp" class="btn btn-primary btn-wide">تأیید و ورود</button>
+      <button id="admBack" class="btn btn-ghost btn-wide">بازگشت</button>
     </div>
     <p id="authMsg" class="auth-msg" role="status"></p>
     <button id="admSetupOpen" class="btn btn-link hidden" type="button">راه‌اندازی اولیه: ساخت اولین حساب مالک</button>
@@ -51,8 +57,12 @@
 </section>
 
 <section id="setup" class="screen hidden" aria-label="راه‌اندازی اولیه">
+  <button class="icon-btn screen-theme" type="button" data-theme-toggle aria-label="تغییر تم روشن/تاریک" title="تغییر تم">
+    <svg class="ni ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>
+    <svg class="ni ico-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>
+  </button>
   <div class="auth-card">
-    <div class="auth-logo"><img src="./assets/logo.png" alt="Unknown AI" width="168" height="113"></div>
+    <div class="auth-logo"><img class="logo-img" src="./assets/logo-mark.png" alt="Unknown AI" width="356" height="36"></div>
     <h1>ساخت حساب مالک</h1>
     <p class="auth-sub">این مرحله فقط یک‌بار اجرا می‌شود و بلافاصله پس از ساخت مالک بسته می‌شود. رمز عبور در سرویس احراز هویت Supabase با hashing امن ذخیره می‌شود و در این سرور نگه داشته نمی‌شود.</p>
     <label for="suUser">نام کاربری (۳ تا ۳۲ نویسه: حروف کوچک انگلیسی، رقم، نقطه، خط تیره)</label>
@@ -65,53 +75,59 @@
     <input id="suEmail" type="email" autocomplete="email" class="dir-ltr" maxlength="320" placeholder="you@example.com">
     <label for="suCode">کد راه‌اندازی (همان مقدار ADMIN_BOOTSTRAP_CODE در Worker)</label>
     <input id="suCode" type="password" autocomplete="off" spellcheck="false" class="dir-ltr" maxlength="128">
-    <button id="suRun" class="btn btn-primary">ساخت حساب مالک</button>
+    <button id="suRun" class="btn btn-primary btn-wide">ساخت حساب مالک</button>
     <p id="setupMsg" class="auth-msg" role="status"></p>
-    <button id="setupBack" class="btn btn-ghost" type="button">بازگشت به صفحه ورود</button>
+    <button id="setupBack" class="btn btn-ghost btn-wide" type="button">بازگشت به صفحه ورود</button>
   </div>
 </section>
 
 <main id="app" class="hidden">
-  <aside id="side">
+  <aside id="side" aria-label="منوی اصلی">
     <div class="brand">
-      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><defs><linearGradient id="bm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffab62"/><stop offset="1" stop-color="#f0601a"/></linearGradient></defs><rect width="40" height="40" rx="13" fill="url(#bm)"/><path d="M23.5 11 14 20l9.5 9" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="27.5" cy="20" r="2.4" fill="#fff"/></svg></span>
-      <div class="brand-text"><b>Unknown AI</b><small>پنل مدیریت</small></div>
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><defs><linearGradient id="bm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6a5f"/><stop offset="1" stop-color="#d9201a"/></linearGradient></defs><rect width="40" height="40" rx="13" fill="url(#bm)"/><path d="M23.5 11 14 20l9.5 9" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="27.5" cy="20" r="2.4" fill="#fff"/></svg></span>
+      <div class="brand-text"><img class="logo-img brand-logo" src="./assets/logo-mark.png" alt="Unknown AI" width="356" height="36"><small>پنل مدیریت</small></div>
+      <button id="sideCollapse" class="icon-btn icon-btn-sm only-desktop" type="button" aria-label="جمع‌کردن منو" aria-expanded="true" title="جمع‌کردن / باز‌کردن منو">
+        <svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M9 5v14"/></svg>
+      </button>
     </div>
     <nav id="nav" aria-label="بخش‌ها">
       <button class="navbtn active" data-view="dash" data-tip="داشبورد" title="داشبورد"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.8 12 3l9 7.8"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span class="nl">داشبورد</span></button>
       <button class="navbtn" data-view="users" data-tip="کاربران" title="کاربران"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.7a3.5 3.5 0 0 1 0 6.6M18 14.8c1.9.7 3.2 2.4 3.5 5.2"/></svg><span class="nl">کاربران</span></button>
-      <button class="navbtn" data-view="support" data-tip="پشتیبانی" title="پشتیبانی"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-8l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg><span class="nl">پشتیبانی</span><i id="supportDot" class="nav-dot hidden"></i></button>
+      <button class="navbtn" data-view="support" data-tip="پشتیبانی" title="پشتیبانی"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-8l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg><span class="nl">پشتیبانی</span><i id="supportDot" class="nav-count hidden"></i></button>
       <button class="navbtn" data-view="reports" data-tip="گزارش‌ها" title="گزارش‌ها"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="nl">گزارش‌ها</span></button>
       <button class="navbtn" data-view="audit" data-tip="رویدادهای مدیریتی" title="رویدادهای مدیریتی"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="nl">رویدادهای مدیریتی</span></button>
       <button class="navbtn" data-view="admins" id="navAdmins" data-tip="مدیران" title="مدیران"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg><span class="nl">مدیران</span></button>
     </nav>
     <div class="side-foot">
+      <div class="profile" title="حساب فعلی">
+        <span id="meAvatar" class="avatar" aria-hidden="true">A</span>
+        <span class="profile-text"><b id="meRole" class="role-name"></b><small id="meEmail" class="me-email dir-ltr"></small></span>
+      </div>
       <button id="admLogout" class="navbtn navbtn-out" data-tip="خروج" title="خروج"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 8l-4 4 4 4M6 12h10"/></svg><span class="nl">خروج</span></button>
     </div>
     <!-- keep meBadge for any legacy JS references -->
     <div id="meBadge" class="hidden"></div>
   </aside>
+  <div id="scrim" aria-hidden="true"></div>
 
   <div id="main">
     <header id="top">
-      <button id="menuBtn" class="icon-btn only-mobile" type="button" aria-label="منو"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
+      <h1 id="pageTitle">داشبورد</h1>
       <label class="search" for="globalSearch">
         <svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
         <input id="globalSearch" type="search" placeholder="جستجوی کاربر (ایمیل / شماره / شناسه)" autocomplete="off" enterkeyhint="search">
+        <button id="kbdHint" class="kbd" type="button" aria-label="رفتن به جستجو"><span>Ctrl</span><span>K</span></button>
       </label>
-      <button id="kbdHint" class="kbd" type="button" aria-label="رفتن به جستجو"><span>⌘</span><span class="kbd-plus">+</span><span>K</span></button>
-      <h1 id="pageTitle">داشبورد</h1>
-      <div class="top-spacer"></div>
       <div class="top-actions">
         <span id="todayMeta" class="date-chip"></span>
         <span id="refreshMeta" class="muted small"></span>
         <button id="refreshBtn" class="icon-btn" type="button" title="بازخوانی" aria-label="بازخوانی"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg></button>
+        <button class="icon-btn" type="button" data-theme-toggle aria-label="تغییر تم روشن/تاریک" title="تغییر تم">
+          <svg class="ni ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>
+          <svg class="ni ico-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>
+        </button>
         <button id="bellBtn" class="icon-btn" type="button" title="درخواست‌های پشتیبانی" aria-label="درخواست‌های پشتیبانی"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg><i id="bellDot" class="bell-dot hidden"></i></button>
-        <div class="profile">
-          <span id="meAvatar" class="avatar" aria-hidden="true">A</span>
-          <span class="profile-text"><b id="meRole" class="role-name"></b><small id="meEmail" class="me-email dir-ltr"></small></span>
-          <svg class="ni chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-        </div>
+        <button id="menuBtn" class="icon-btn only-mobile" type="button" aria-label="منو"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
       </div>
     </header>
     <div id="content">
@@ -126,18 +142,18 @@
   </div>
 </main>
 
-<div id="modalWrap" class="modal-wrap hidden" role="dialog" aria-modal="true">
+<div id="modalWrap" class="modal-wrap hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal">
     <h3 id="modalTitle"></h3>
     <div id="modalBody"></div>
     <div class="modal-actions">
       <button id="modalCancel" class="btn btn-ghost">انصراف</button>
-      <button id="modalOk" class="btn btn-danger">تأیید</button>
+      <button id="modalOk" class="btn btn-primary">تأیید</button>
     </div>
   </div>
 </div>
 
-<div id="toast" class="toast hidden" role="status"></div>
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1"></script>
 <script src="./config.js"></script>
