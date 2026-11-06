@@ -405,6 +405,7 @@
     $('meBadge').textContent = roleLabel(me.role) + ' · ' + (me.email || '');
     var roleEl = $('meRole'); if (roleEl) roleEl.textContent = roleLabel(me.role);
     var emailEl = $('meEmail'); if (emailEl) emailEl.textContent = me.email || '';
+    var avEl = $('meAvatar'); if (avEl) avEl.textContent = String(me.email || me.role || 'A').trim().charAt(0).toUpperCase();
     $('navAdmins').classList.toggle('hidden', !isOwner());
   }
   function roleLabel(r) { return { owner: 'مالک', admin: 'مدیر', support: 'پشتیبانی', analyst: 'تحلیل‌گر' }[r] || r; }
@@ -413,6 +414,7 @@
   function switchView(v, keepScroll) {
     if (v === 'admins' && !isOwner()) v = 'dash';
     S.view = v;
+    document.body.setAttribute('data-view', v);
     Array.prototype.forEach.call(document.querySelectorAll('.navbtn'), function (b) { b.classList.toggle('active', b.getAttribute('data-view') === v); });
     Array.prototype.forEach.call(document.querySelectorAll('.view'), function (s) { s.classList.add('hidden'); });
     $('pageTitle').textContent = VIEW_TITLES[v];
@@ -426,14 +428,18 @@
   function load(v, quiet) {
     var fn = { dash: loadDash, users: loadUsers, user: loadUser, support: loadSupport, reports: loadReports, audit: loadAudit, admins: loadAdmins }[v];
     var box = $('view-' + v);
-    box.textContent = '';
-    if (!fn) return;
-    var spin = h('div', { cls: 'loading-row' }, [h('div', { cls: 'spinner spinner-sm' }), h('span', { cls: 'muted', text: 'در حال دریافت داده…' })]);
-    box.appendChild(spin);
+    if (!fn) { box.textContent = ''; return; }
+    var spin = null;
+    if (!quiet) {
+      box.textContent = '';
+      spin = h('div', { cls: 'loading-row' }, [h('div', { cls: 'spinner spinner-sm' }), h('span', { cls: 'muted', text: 'در حال دریافت داده…' })]);
+      box.appendChild(spin);
+    }
     var p;
-    try { p = fn(box); } finally { if (spin.parentNode) spin.parentNode.removeChild(spin); }
+    try { p = fn(box, quiet); } finally { if (spin && spin.parentNode && v !== 'dash') spin.parentNode.removeChild(spin); }
     Promise.resolve(p).catch(function (e) {
       if (e && (e.message === 'no_session' || e.message === 'unauthorized')) return;
+      if (quiet) return; // background refresh failed: keep what is on screen
       box.textContent = '';
       var text = (e && (e.fa || (e.body && e.body.response))) || 'بارگذاری این بخش ناموفق بود.';
       var retry = h('button', { cls: 'btn btn-ghost btn-sm', text: 'تلاش دوباره' });
@@ -442,89 +448,151 @@
     });
   }
 
-  // ---------- tiny SVG charts ----------
-  function bars(data, color, height) {
-    height = height || 160;
-    var svgNS = 'http://www.w3.org/2000/svg';
-    var n = data.length || 1;
-    var max = Math.max.apply(null, data.map(function (d) { return d.value || 0; }).concat([1]));
-    var svg = document.createElementNS(svgNS, 'svg');
-    var W = Math.max(n * 32, 340), H = height;
-    var padL = 8, padR = 8, padT = 12, padB = 24;
-    var chartW = W - padL - padR, chartH = H - padT - padB;
-    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
-    svg.setAttribute('role', 'img');
-    // soft grid lines
-    for (var g = 0; g < 4; g++) {
-      var gy = padT + (chartH / 3) * g;
-      var line = document.createElementNS(svgNS, 'line');
-      line.setAttribute('x1', padL); line.setAttribute('x2', W - padR);
-      line.setAttribute('y1', gy); line.setAttribute('y2', gy);
-      line.setAttribute('stroke', 'rgba(255,255,255,0.04)');
-      line.setAttribute('stroke-width', '1');
-      svg.appendChild(line);
+  // ---------- charts ----------
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  function svgEl(name, attrs) {
+    var e = document.createElementNS(SVGNS, name);
+    Object.keys(attrs || {}).forEach(function (k) { e.setAttribute(k, attrs[k]); });
+    return e;
+  }
+  /** 1.2K / 3.4M / 5B with Persian digits (short enough for axis labels and bar tops). */
+  function compact(n) {
+    n = Number(n) || 0;
+    var abs = Math.abs(n), div = 1, suf = '';
+    if (abs >= 1e9) { div = 1e9; suf = 'B'; } else if (abs >= 1e6) { div = 1e6; suf = 'M'; } else if (abs >= 1e3) { div = 1e3; suf = 'K'; }
+    return (n / div).toLocaleString('fa-IR', { maximumFractionDigits: 1 }) + suf;
+  }
+  function niceCeil(v) {
+    if (!(v > 0)) return 1;
+    var p = Math.pow(10, Math.floor(Math.log10(v))), r = v / p;
+    var m = r <= 1 ? 1 : r <= 2 ? 2 : r <= 2.5 ? 2.5 : r <= 5 ? 5 : 10;
+    return m * p;
+  }
+  function pctChange(cur, prev) { return prev > 0 ? ((cur - prev) / prev) * 100 : null; }
+  function deltaBadge(p) {
+    if (p === null || !isFinite(p)) return null;
+    var up = p >= 0;
+    return h('span', { cls: 'delta ' + (up ? 'up' : 'down'), text: (up ? '↑ ' : '↓ ') + Math.abs(p).toLocaleString('fa-IR', { maximumFractionDigits: 1 }) + '٪' });
+  }
+  function sum(arr) { return arr.reduce(function (a, b) { return a + b; }, 0); }
+
+  /**
+   * Responsive area chart: redraws at the real pixel width (ResizeObserver), y-axis on the right,
+   * dashed grid, white tooltip pill that follows the pointer and rests on the latest point.
+   * data: [{ label, value }] in chronological order.
+   */
+  function areaChart(data, opts) {
+    opts = opts || {};
+    var color = opts.color || '#ff7a2f';
+    var H = opts.height || 250;
+    var padL = 8, padR = 46, padT = 50, padB = 28;
+    var n = data.length;
+    var wrap = h('div', { cls: 'achart' });
+    wrap.style.height = H + 'px';
+    if (!n) { wrap.style.height = 'auto'; wrap.appendChild(h('div', { cls: 'empty', text: 'داده‌ای برای نمایش نیست.' })); return wrap; }
+    var tip = h('div', { cls: 'achart-tip' });
+    wrap.appendChild(tip);
+    var svg = null, pts = [], marker = null, sel = n - 1, lastW = 0, cw = 0;
+    var gid = 'ag' + Math.random().toString(36).slice(2, 8);
+
+    function place(i) {
+      if (!pts.length) return;
+      i = Math.min(Math.max(i, 0), pts.length - 1); sel = i;
+      var p = pts[i], W = wrap.clientWidth;
+      if (marker) marker.setAttribute('transform', 'translate(' + p.x + ' ' + p.y + ')');
+      tip.textContent = '';
+      tip.appendChild(h('span', { cls: 'tip-date', text: p.d.label }));
+      tip.appendChild(h('b', { cls: 'tip-val', text: fa(p.d.value) }));
+      tip.style.left = Math.min(Math.max(p.x, 58), W - 58) + 'px';
+      tip.style.top = Math.max(p.y - 16, 56) + 'px';
     }
-    // build path points (RTL: newest on the right visually → reverse x)
-    var pts = [];
-    data.forEach(function (d, i) {
-      var x = padL + ((n - 1 - i) / Math.max(n - 1, 1)) * chartW;
-      var y = padT + chartH - (Math.max(d.value, 0) / max) * chartH;
-      pts.push({ x: x, y: y, d: d });
-    });
-    // area fill under the curve
-    if (pts.length > 1) {
-      var area = document.createElementNS(svgNS, 'path');
-      var ad = 'M' + pts[0].x + ',' + (padT + chartH);
-      pts.forEach(function (p) { ad += ' L' + p.x + ',' + p.y; });
-      ad += ' L' + pts[pts.length - 1].x + ',' + (padT + chartH) + ' Z';
-      area.setAttribute('d', ad);
-      area.setAttribute('fill', color);
-      area.setAttribute('opacity', '0.12');
-      svg.appendChild(area);
-    }
-    // smooth-ish polyline
-    if (pts.length) {
-      var path = document.createElementNS(svgNS, 'path');
-      var pd = 'M' + pts[0].x + ',' + pts[0].y;
-      for (var i = 1; i < pts.length; i++) {
-        var prev = pts[i - 1], cur = pts[i];
-        var cpx = (prev.x + cur.x) / 2;
-        pd += ' C' + cpx + ',' + prev.y + ' ' + cpx + ',' + cur.y + ' ' + cur.x + ',' + cur.y;
+    function draw() {
+      var W = wrap.clientWidth;
+      if (!W || (svg && W === lastW)) return;
+      lastW = W;
+      if (svg && svg.parentNode) svg.parentNode.removeChild(svg);
+      svg = svgEl('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': opts.label || 'نمودار روند' });
+      cw = Math.max(W - padL - padR, 10);
+      var ch = H - padT - padB;
+      var max = niceCeil(Math.max.apply(null, data.map(function (d) { return d.value || 0; })));
+      var defs = svgEl('defs');
+      var lg = svgEl('linearGradient', { id: gid, x1: 0, y1: 0, x2: 0, y2: 1 });
+      lg.appendChild(svgEl('stop', { offset: '0', 'stop-color': color, 'stop-opacity': '.62' }));
+      lg.appendChild(svgEl('stop', { offset: '1', 'stop-color': color, 'stop-opacity': '0' }));
+      defs.appendChild(lg); svg.appendChild(defs);
+      for (var t = 0; t <= 4; t++) {
+        var gy = padT + ch - (ch * t) / 4;
+        svg.appendChild(svgEl('line', { x1: padL, x2: padL + cw, y1: gy, y2: gy, stroke: 'rgba(255,255,255,.07)', 'stroke-dasharray': t === 0 ? '0' : '3 6' }));
+        var yl = svgEl('text', { x: padL + cw + 12, y: gy + 4, fill: '#a89a8d', 'font-size': '11', 'text-anchor': 'start' });
+        yl.textContent = compact((max * t) / 4);
+        svg.appendChild(yl);
       }
-      path.setAttribute('d', pd);
-      path.setAttribute('fill', 'none');
-      path.setAttribute('stroke', color);
-      path.setAttribute('stroke-width', '2.5');
-      path.setAttribute('stroke-linecap', 'round');
-      path.setAttribute('stroke-linejoin', 'round');
-      svg.appendChild(path);
-    }
-    // dots + labels
-    pts.forEach(function (p, i) {
-      var c = document.createElementNS(svgNS, 'circle');
-      c.setAttribute('cx', p.x); c.setAttribute('cy', p.y);
-      c.setAttribute('r', i === 0 ? 4.5 : 3);
-      c.setAttribute('fill', color);
-      c.setAttribute('stroke', '#121214');
-      c.setAttribute('stroke-width', '2');
-      var title = document.createElementNS(svgNS, 'title');
-      title.textContent = p.d.label + ': ' + fa(p.d.value);
-      c.appendChild(title);
-      svg.appendChild(c);
-      if (n <= 16 && i % (n > 10 ? 2 : 1) === 0) {
-        var tx = document.createElementNS(svgNS, 'text');
-        tx.setAttribute('x', p.x);
-        tx.setAttribute('y', H - 6);
-        tx.setAttribute('fill', '#8a8a96');
-        tx.setAttribute('font-size', '9');
-        tx.setAttribute('text-anchor', 'middle');
+      pts = data.map(function (d, i) {
+        return { d: d, x: padL + (n > 1 ? (i / (n - 1)) * cw : cw / 2), y: padT + ch - ((d.value || 0) / max) * ch };
+      });
+      var line = 'M' + pts[0].x + ',' + pts[0].y;
+      for (var i = 1; i < pts.length; i++) {
+        var a = pts[i - 1], b = pts[i], cx = (a.x + b.x) / 2;
+        line += ' C' + cx + ',' + a.y + ' ' + cx + ',' + b.y + ' ' + b.x + ',' + b.y;
+      }
+      var base = padT + ch;
+      svg.appendChild(svgEl('path', { d: line + ' L' + pts[pts.length - 1].x + ',' + base + ' L' + pts[0].x + ',' + base + ' Z', fill: 'url(#' + gid + ')' }));
+      svg.appendChild(svgEl('path', { d: line, fill: 'none', stroke: color, 'stroke-width': '2.4', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+      var perLabel = Math.max(Math.floor(cw / 58), 2), step = Math.max(Math.ceil(n / perLabel), 1);
+      pts.forEach(function (p, i) {
+        if (i % step !== 0 && i !== n - 1) return;
+        if (i === n - 1 && (n - 1) % step !== 0 && (n - 1 - Math.floor((n - 1) / step) * step) < step * 0.6) return;
+        var tx = svgEl('text', { x: p.x, y: H - 6, fill: '#a89a8d', 'font-size': '11', 'text-anchor': i === 0 ? 'start' : (i === n - 1 ? 'end' : 'middle') });
         tx.textContent = p.d.label;
         svg.appendChild(tx);
-      }
+      });
+      marker = svgEl('g');
+      marker.appendChild(svgEl('circle', { r: 11, fill: color, 'fill-opacity': '.25' }));
+      marker.appendChild(svgEl('circle', { r: 5.5, fill: '#fff', stroke: color, 'stroke-width': '2' }));
+      svg.appendChild(marker);
+      wrap.insertBefore(svg, tip);
+      place(sel);
+    }
+    function onMove(e) {
+      if (!pts.length) return;
+      var r = wrap.getBoundingClientRect();
+      place(Math.round(((e.clientX - r.left - padL) / cw) * (n - 1)));
+    }
+    wrap.addEventListener('pointermove', onMove);
+    wrap.addEventListener('pointerdown', onMove);
+    wrap.addEventListener('pointerleave', function () { place(n - 1); });
+    if (window.ResizeObserver) new ResizeObserver(draw).observe(wrap);
+    else window.addEventListener('resize', draw);
+    requestAnimationFrame(draw);
+    return wrap;
+  }
+
+  /** Brown bars with a green highlighted bar + value pill (hover / tap / focus moves the highlight). */
+  function barChart(data) {
+    var host = h('div', { cls: 'bchart', role: 'list' });
+    if (!data.length) { host.appendChild(h('div', { cls: 'empty', text: 'داده‌ای برای نمایش نیست.' })); return host; }
+    var max = Math.max.apply(null, data.map(function (d) { return d.value || 0; }).concat([1]));
+    var cols = [];
+    function select(c) { cols.forEach(function (x) { x.classList.toggle('on', x === c); }); }
+    data.forEach(function (d, i) {
+      var bar = h('i', { cls: 'bbar' });
+      bar.style.height = Math.max(8, Math.round(((d.value || 0) / max) * 120)) + 'px';
+      var col = h('div', { cls: 'bcol' + (i === data.length - 1 ? ' on' : ''), tabindex: '0', role: 'listitem', title: d.label + ': ' + fa(d.value) }, [
+        h('span', { cls: 'bval', text: compact(d.value) }), bar, h('span', { cls: 'baxis', text: d.label })
+      ]);
+      ['mouseenter', 'focus', 'click'].forEach(function (ev) { col.addEventListener(ev, function () { select(col); }); });
+      cols.push(col); host.appendChild(col);
     });
-    return h('div', { cls: 'chart' }, [svg]);
+    host.addEventListener('mouseleave', function () { select(cols[cols.length - 1]); });
+    return host;
   }
   function faDay(iso) { try { return new Intl.DateTimeFormat('fa-IR', { day: 'numeric', month: 'numeric' }).format(new Date(iso)); } catch (e) { return iso; } }
+  function hueOf(s) { var x = 0; s = String(s || ''); for (var i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) % 360; return x; }
+  function avatarEl(who, extraCls, bg) {
+    var el = h('span', { cls: 'av' + (extraCls ? ' ' + extraCls : ''), text: String(who || '?').trim().charAt(0) || '?' });
+    el.style.background = bg || ('linear-gradient(135deg,hsl(' + hueOf(who) + ' 62% 48%),hsl(' + ((hueOf(who) + 40) % 360) + ' 60% 32%))');
+    return el;
+  }
 
   function card(title, kids) { return h('div', { cls: 'card' }, [h('h3', { text: title })].concat(kids)); }
   function kpi(label, value, sub) {
@@ -539,23 +607,14 @@
     var cls = ['active', 'suspended', 'banned', 'open', 'closed'].indexOf(status) >= 0 ? status : 'closed';
     return h('span', { cls: 'badge ' + cls, text: map[status] || status || '—' });
   }
+  function icon(path) { var s = svgEl('svg', { viewBox: '0 0 24 24', 'class': 'ni', 'aria-hidden': 'true' }); s.innerHTML = path; return s; }
 
   // ---------- dashboard ----------
-  function loadDash(box) {
-    var portfolio = h('div', { cls: 'portfolio-card' });
-    var portfolioHead = h('div', { cls: 'portfolio-head' }, [
-      h('h3', { text: 'نمای کلی سیستم' }),
-      h('div', { cls: 'portfolio-actions' }, [
-        h('span', { cls: 'muted small', id: 'dashLiveHint', text: 'زنده' })
-      ])
-    ]);
-    var grid = h('div', { cls: 'grid kpis' });
-    portfolio.append(portfolioHead, grid);
-    var two = h('div', { cls: 'grid cols-2' });
-    var three = h('div', { cls: 'grid cols-3' });
-    var health = card('سلامت سیستم', [h('div', { cls: 'empty', text: '…' })]);
-    [portfolio, two, three, health].forEach(function (x) { box.appendChild(x); });
+  var DASH_METRICS = [['messages', 'پیام‌ها'], ['requests', 'درخواست‌های AI'], ['tokens', 'توکن'], ['signups', 'عضو جدید']];
+  var BAR_METRICS = [['tokens', 'توکن مصرفی'], ['requests', 'درخواست‌های AI'], ['messages', 'پیام‌ها']];
+  S.dash = S.dash || { metric: 'messages', bar: 'tokens' };
 
+  function loadDash(box, quiet) {
     return Promise.all([
       api('/api/admin/stats'),
       fetch(apiUrl('/api/health')).then(function (r) { return r.json(); }).catch(function () { return { ok: false }; })
@@ -564,8 +623,141 @@
       ONLINE_MIN = st.online_minutes || ONLINE_MIN;
       lastStatsAt = Date.now();
       $('refreshMeta').textContent = 'آخرین به‌روزرسانی: ' + dt(new Date().toISOString());
-      grid.textContent = '';
-      grid.append(
+      var openSupport = (st.support && st.support.open) || 0;
+      ['supportDot', 'bellDot'].forEach(function (id) { var d = $(id); if (d) d.classList.toggle('hidden', !openSupport); });
+
+      var trend = (st.trend || []).slice().sort(function (a, b) { return new Date(a.day) - new Date(b.day); });
+      var wrap = h('div', { cls: 'dash-wrap' });
+
+      /* ---- Total (area chart) ---- */
+      var tTitle = h('div', { cls: 'p-title' }), tNum = h('span', { cls: 'big-num' }), tDelta = h('span');
+      var tabs = h('div', { cls: 'seg-tabs', role: 'tablist' });
+      var chartHost = h('div'), segRow = h('div', { cls: 'seg-row', 'aria-hidden': 'true' });
+      var avgText = h('span', { cls: 'p-sub' });
+      var tabBtns = {};
+      function renderTotal() {
+        var m = S.dash.metric;
+        var vals = trend.map(function (d) { return Number(d[m]) || 0; });
+        var series = trend.map(function (d, i) { return { label: faDay(d.day), value: vals[i] }; });
+        var label = (DASH_METRICS.filter(function (x) { return x[0] === m; })[0] || [0, ''])[1];
+        tTitle.textContent = label + ' · ' + fa(vals.length) + ' روز اخیر';
+        tNum.textContent = fa(sum(vals));
+        var cur = sum(vals.slice(-7)), prev = sum(vals.slice(-14, -7));
+        tDelta.replaceWith(tDelta = deltaBadge(pctChange(cur, prev)) || h('span'));
+        chartHost.textContent = '';
+        chartHost.appendChild(areaChart(series, { color: '#ff7a2f', height: 250, label: 'روند ' + label }));
+        var avg = vals.length ? sum(vals) / vals.length : 0;
+        segRow.textContent = '';
+        vals.forEach(function (v) { segRow.appendChild(h('span', { cls: 'seg' + (v > avg ? ' hi' : '') })); });
+        avgText.textContent = 'میانگین روزانه: ' + fa(Math.round(avg));
+        Object.keys(tabBtns).forEach(function (k) { tabBtns[k].classList.toggle('active', k === m); tabBtns[k].setAttribute('aria-selected', k === m ? 'true' : 'false'); });
+      }
+      DASH_METRICS.forEach(function (mm) {
+        var b = h('button', { cls: 'seg-tab', type: 'button', role: 'tab', text: mm[1] });
+        on(b, 'click', function () { S.dash.metric = mm[0]; renderTotal(); });
+        tabBtns[mm[0]] = b; tabs.appendChild(b);
+      });
+      var totalPanel = h('div', { cls: 'panel p-total' }, [
+        h('div', { cls: 'p-head' }, [h('div', {}, [tTitle, h('div', { cls: 'big-row' }, [tNum, tDelta])]), tabs]),
+        chartHost, segRow,
+        h('div', { cls: 'p-foot' }, [avgText, h('div', { cls: 'legend' }, [
+          h('span', { cls: 'lg' }, [h('i', { cls: 'sq white' }), 'مقدار روزانه']),
+          h('span', { cls: 'lg' }, [h('i', { cls: 'sq green' }), 'روز بالاتر از میانگین'])
+        ])])
+      ]);
+
+      /* ---- Promo (users) ---- */
+      var signups = st.recent_signups || [];
+      var avatars = h('div', { cls: 'avatars' });
+      signups.slice(0, 3).forEach(function (u) { avatars.appendChild(avatarEl(u.email || u.id)); });
+      avatars.appendChild(h('span', { cls: 'av-plus', text: '+' }));
+      var goUsers = h('button', { cls: 'btn-white btn', type: 'button', text: 'مشاهده کاربران' });
+      on(goUsers, 'click', function () { switchView('users'); });
+      var promo = h('div', { cls: 'panel promo' }, [
+        h('h3', {}, [fa(st.users.total) + ' کاربر', h('span', { text: 'در Unknown AI' })]),
+        h('p', { cls: 'promo-note', text: fa(st.users.online) + ' نفر آنلاین · ' + fa(st.users.new_today) + ' عضو جدید امروز' }),
+        avatars, goUsers
+      ]);
+
+      /* ---- Bars (last 7 days) ---- */
+      var bNum = h('span', { cls: 'big-num' }), bDelta = h('span'), bHost = h('div');
+      var metricSel = h('select', { cls: 'pill-select', 'aria-label': 'معیار نمودار میله‌ای' });
+      BAR_METRICS.forEach(function (o) { metricSel.appendChild(h('option', { value: o[0], text: o[1] })); });
+      metricSel.value = S.dash.bar;
+      var bTitle = h('div', { cls: 'p-title' });
+      function renderBars() {
+        var m = S.dash.bar;
+        var vals = trend.map(function (d) { return Number(d[m]) || 0; });
+        var last = trend.slice(-7);
+        bTitle.textContent = (BAR_METRICS.filter(function (x) { return x[0] === m; })[0] || [0, ''])[1] + ' · ۷ روز اخیر';
+        bNum.textContent = fa(sum(vals.slice(-7)));
+        bDelta.replaceWith(bDelta = deltaBadge(pctChange(sum(vals.slice(-7)), sum(vals.slice(-14, -7)))) || h('span'));
+        bHost.textContent = '';
+        bHost.appendChild(barChart(last.map(function (d) { return { label: faDay(d.day), value: Number(d[m]) || 0 }; })));
+      }
+      on(metricSel, 'change', function () { S.dash.bar = metricSel.value; renderBars(); });
+      var barPanel = h('div', { cls: 'panel p-bars' }, [
+        h('div', { cls: 'p-head' }, [h('div', {}, [bTitle, h('div', { cls: 'big-row' }, [bNum, bDelta])]), metricSel]),
+        bHost
+      ]);
+
+      /* ---- Right column: quick view + recent activity ---- */
+      var totalUsers = Number(st.users.total) || 0, onlineUsers = Number(st.users.online) || 0;
+      var onlinePct = totalUsers ? (onlineUsers / totalUsers) * 100 : 0;
+      var stack = h('div', { cls: 'stack' }, [
+        h('div', { cls: 'sc sc-b2' }, [h('div', { cls: 'sc-row' }, [h('span', { text: 'درخواست‌های AI امروز' }), h('span', { text: fa(st.ai.requests_today) })])]),
+        h('div', { cls: 'sc sc-b1' }, [h('div', { cls: 'sc-row' }, [h('span', { text: 'پیام‌های امروز' }), h('span', { text: fa(st.usage.messages_today) })])]),
+        h('div', { cls: 'sc sc-f' }, [
+          h('div', { cls: 'sc-top' }, [h('span', { cls: 'sc-l', text: 'Unknown AI' }), h('i', { cls: 'chip' })]),
+          h('div', {}, [
+            h('div', { cls: 'sc-note', text: 'کاربران آنلاین' }),
+            h('div', { cls: 'sc-bottom' }, [
+              h('span', { cls: 'sc-val', text: fa(onlineUsers) }),
+              h('span', { cls: 'pill-green', text: onlinePct.toLocaleString('fa-IR', { maximumFractionDigits: 1 }) + '٪ از کل' })
+            ])
+          ])
+        ])
+      ]);
+      var allUsersBtn = h('button', { cls: 'pill-btn', type: 'button', text: 'همه کاربران' });
+      on(allUsersBtn, 'click', function () { switchView('users'); });
+      var supBtn = h('button', { cls: 'btn btn-glass', type: 'button' }, [icon('<path d="M7 7l10 10M17 9v8H9"/>'), 'پشتیبانی' + (openSupport ? ' (' + fa(openSupport) + ')' : '')]);
+      on(supBtn, 'click', function () { switchView('support'); });
+      var repBtn = h('button', { cls: 'btn btn-orange', type: 'button' }, [icon('<path d="M7 17 17 7M9 7h8v8"/>'), 'گزارش‌ها']);
+      on(repBtn, 'click', function () { switchView('reports'); });
+
+      var feed = [];
+      (st.recent_activity || []).forEach(function (a) { feed.push({ who: a.email || a.user_id || '', kind: a.kind, at: a.at }); });
+      (st.recent_errors || []).forEach(function (e) { feed.push({ who: e.email || '', kind: 'error', at: e.at }); });
+      feed.sort(function (a, b) { return new Date(b.at) - new Date(a.at); });
+      var TAGS = { login: ['ورود', 'pos'], message: ['پیام', 'neu'], support: ['پشتیبانی', 'warn'], error: ['خطا', 'neg'] };
+      var feedBox = h('div', { cls: 'feed' });
+      feed.slice(0, 4).forEach(function (f) {
+        var tg = TAGS[f.kind] || [f.kind || '—', 'neu'];
+        var av = avatarEl(f.who, '', f.kind === 'error' ? 'linear-gradient(135deg,#8c2b25,#4d1512)' : null);
+        feedBox.appendChild(h('div', { cls: 'feed-item' }, [
+          av,
+          h('div', { cls: 'feed-main' }, [h('span', { cls: 'feed-name', text: (f.who || '—').slice(0, 28) }), h('span', { cls: 'feed-sub', text: ago(f.at) })]),
+          h('span', { cls: 'tag ' + tg[1], text: tg[0] })
+        ]));
+      });
+      if (!feed.length) feedBox.appendChild(h('div', { cls: 'empty', text: 'فعالیتی ثبت نشده' }));
+      var moreBtn = h('button', { cls: 'link-btn', type: 'button', text: 'مشاهده همه' });
+      on(moreBtn, 'click', function () { switchView('audit'); });
+
+      var right = h('div', { cls: 'panel dash-right' }, [
+        h('div', { cls: 'rp-sec' }, [
+          h('div', { cls: 'rp-head' }, [h('h3', { text: 'نمای سریع' }), allUsersBtn]),
+          stack,
+          h('div', { cls: 'dual' }, [supBtn, repBtn])
+        ]),
+        h('div', { cls: 'rp-sec' }, [h('div', { cls: 'rp-head' }, [h('h3', { text: 'فعالیت‌های اخیر' }), moreBtn]), feedBox])
+      ]);
+
+      wrap.appendChild(h('div', { cls: 'dash' }, [h('div', { cls: 'dash-left' }, [totalPanel, h('div', { cls: 'dash-row' }, [promo, barPanel])]), right]));
+      renderTotal(); renderBars();
+
+      /* ---- KPI strip ---- */
+      var kpis = [
         kpi('کاربران کل', fa(st.users.total), fa(st.users.confirmed) + ' ایمیل تأییدشده'),
         kpi('آنلاین (' + fa(ONLINE_MIN) + ' دقیقه اخیر)', fa(st.users.online), 'بر پایه آخرین فعالیت سمت سرور'),
         kpi('ورودهای جدید امروز', fa(st.users.new_today), 'این هفته: ' + fa(st.users.new_week)),
@@ -578,30 +770,12 @@
         kpi('نشست‌های ورود', fa(st.sessions.logins_today), 'امروز · هفته: ' + fa(st.sessions.logins_week)),
         kpi('خطاهای AI (۲۴ ساعت)', fa(st.ai.failed_24h), st.feedback.up ? 'بازخورد ▲' + fa(st.feedback.up) + ' ▼' + fa(st.feedback.down) : ''),
         kpi('پشتیبانی باز', fa(st.support.open), 'جدید امروز: ' + fa(st.support.new_today))
-      );
+      ];
+      wrap.appendChild(h('div', { cls: 'kpi-grid' }, kpis.map(function (k) { return h('div', { cls: 'kpi-card' }, [k]); })));
 
-      two.textContent = '';
-      two.append(
-        card('روند ۱۴ روز — پیام‌ها', [bars((st.trend || []).map(function (d) { return { label: faDay(d.day), value: d.messages }; }), '#e5484d')]),
-        card('روند ۱۴ روز — درخواست‌های AI', [bars((st.trend || []).map(function (d) { return { label: faDay(d.day), value: d.requests }; }), '#527bff')])
-      );
-
-      function listItem(left, right) { return h('div', { cls: 'list-item' }, [left, h('span', { cls: 'muted small', text: right })]); }
-      three.textContent = '';
-      three.append(
-        card('تازه‌ترین عضوها', (st.recent_signups || []).map(function (u) {
-          return listItem(h('span', { cls: 'dir-ltr', text: u.email || u.id }), dOnly(u.created_at));
-        }).concat(st.recent_signups && st.recent_signups.length ? [] : [h('div', { cls: 'empty', text: 'کاربری وجود ندارد' })])),
-        card('فعالیت‌های اخیر', (st.recent_activity || []).map(function (a) {
-          var kinds = { message: 'پیام', login: 'ورود', support: 'پشتیبانی' };
-          return listItem(h('span', { cls: 'dir-ltr', text: (a.email || a.user_id || '').slice(0, 24) + ' · ' + (kinds[a.kind] || a.kind) }), ago(a.at));
-        }).concat([st.recent_activity && st.recent_activity.length ? null : h('div', { cls: 'empty', text: 'فعالیتی ثبت نشده' })])),
-        card('خطاهای اخیر', (st.recent_errors || []).map(function (e) {
-          return listItem(h('span', { cls: 'dir-ltr', text: (e.email || '').slice(0, 24) + ' · ' + (e.error_code || 'error') }), ago(e.at));
-        }).concat([st.recent_errors && st.recent_errors.length ? null : h('div', { cls: 'empty', text: 'خطایی گزارش نشده ✓' })]))
-      );
-
-      health.textContent = '';
+      /* ---- Lists + health ---- */
+      function listItem(left, right2) { return h('div', { cls: 'list-item' }, [left, h('span', { cls: 'muted small', text: right2 })]); }
+      var health = card('سلامت سیستم', []);
       var apiOk = hb && hb.ok && hb.configured;
       [
         h('div', { cls: 'list-item' }, [h('span', {}, [h('span', { cls: 'dot ' + (hb && hb.ok ? 'on' : 'off') }), h('span', { text: 'API Worker' })]), h('span', { cls: 'muted small', text: hb && hb.configured ? 'آماده‌به‌کار' : (hb && hb.ok ? 'پیکربندی ناقص' : 'در دسترس نیست') })]),
@@ -610,6 +784,18 @@
         h('div', { cls: 'list-item' }, [h('span', { text: 'درخواست‌های ناموفق ۲۴ ساعت' }), h('span', { cls: st.ai.failed_24h > 0 ? 'badge err' : 'muted small', text: fa(st.ai.failed_24h) })]),
         apiOk ? null : h('p', { cls: 'err-note', text: 'بررسی: در صورت خرابی، وضعیت پیکربندی Worker و اتصال Supabase را بررسی کنید.' })
       ].forEach(function (x) { if (x) health.appendChild(x); });
+      wrap.appendChild(h('div', { cls: 'grid cols-3' }, [
+        card('تازه‌ترین عضوها', signups.map(function (u) {
+          return listItem(h('span', { cls: 'dir-ltr', text: u.email || u.id }), dOnly(u.created_at));
+        }).concat(signups.length ? [] : [h('div', { cls: 'empty', text: 'کاربری وجود ندارد' })])),
+        card('خطاهای اخیر', (st.recent_errors || []).map(function (e) {
+          return listItem(h('span', { cls: 'dir-ltr', text: (e.email || '').slice(0, 24) + ' · ' + (e.error_code || 'error') }), ago(e.at));
+        }).concat([st.recent_errors && st.recent_errors.length ? null : h('div', { cls: 'empty', text: 'خطایی گزارش نشده ✓' })])),
+        health
+      ]));
+
+      box.textContent = '';
+      box.appendChild(wrap);
     });
   }
 
@@ -950,16 +1136,20 @@
   function loadReports(box) {
     return api('/api/admin/stats').then(function (st) {
       var trend = st.trend || [];
+      trend = trend.slice().sort(function (x, y) { return new Date(x.day) - new Date(y.day); });
+      function ser(k) { return trend.map(function (d) { return { label: faDay(d.day), value: Number(d[k]) || 0 }; }); }
       box.append(
-        card('پیام‌های روزانه (۱۴ روز)', [bars(trend.map(function (d) { return { label: faDay(d.day), value: d.messages }; }), '#e5484d', 180)]),
-        card('توکن مصرفی روزانه', [bars(trend.map(function (d) { return { label: faDay(d.day), value: d.tokens }; }), '#f5a524', 180)]),
-        card('کاربران جدید', [bars(trend.map(function (d) { return { label: faDay(d.day), value: d.signups }; }), '#46a758', 180)]),
-        card('جمع‌بندی', [
-          h('div', { cls: 'list-item' }, [h('span', { text: 'کل پیام‌ها' }), h('span', { text: fa(st.content.messages) })]),
-          h('div', { cls: 'list-item' }, [h('span', { text: 'کل درخواست‌های AI' }), h('span', { text: fa(st.ai.requests_total) })]),
-          h('div', { cls: 'list-item' }, [h('span', { text: 'توکن این هفته' }), h('span', { text: fa(st.usage.tokens_week) })]),
-          h('div', { cls: 'list-item' }, [h('span', { text: 'بازخورد کاربران ▲/▼' }), h('span', { text: fa(st.feedback.up) + ' / ' + fa(st.feedback.down) })]),
-          h('div', { cls: 'list-item' }, [h('span', { text: 'درخواست‌های پشتیبانی باز/بسته' }), h('span', { text: fa(st.support.open) + ' / ' + fa(st.support.closed) })])
+        h('div', { cls: 'grid chart-grid' }, [
+          card('پیام‌های روزانه (۱۴ روز)', [areaChart(ser('messages'), { color: '#ff7a2f', height: 230 })]),
+          card('توکن مصرفی روزانه', [areaChart(ser('tokens'), { color: '#ffb454', height: 230 })]),
+          card('کاربران جدید', [areaChart(ser('signups'), { color: '#4fe3a1', height: 230 })]),
+          card('جمع‌بندی', [
+            h('div', { cls: 'list-item' }, [h('span', { text: 'کل پیام‌ها' }), h('span', { text: fa(st.content.messages) })]),
+            h('div', { cls: 'list-item' }, [h('span', { text: 'کل درخواست‌های AI' }), h('span', { text: fa(st.ai.requests_total) })]),
+            h('div', { cls: 'list-item' }, [h('span', { text: 'توکن این هفته' }), h('span', { text: fa(st.usage.tokens_week) })]),
+            h('div', { cls: 'list-item' }, [h('span', { text: 'بازخورد کاربران ▲/▼' }), h('span', { text: fa(st.feedback.up) + ' / ' + fa(st.feedback.down) })]),
+            h('div', { cls: 'list-item' }, [h('span', { text: 'درخواست‌های پشتیبانی باز/بسته' }), h('span', { text: fa(st.support.open) + ' / ' + fa(st.support.closed) })])
+          ])
         ])
       );
       var topWrap = card('پرکاربرترین‌ها (۱۰ کاربر)', [h('div', { cls: 'empty', text: '…' })]);
@@ -1109,6 +1299,21 @@
       on(b, 'click', function () { switchView(b.getAttribute('data-view')); });
     });
     on($('refreshBtn'), 'click', function () { load(S.view); });
+    on($('bellBtn'), 'click', function () { switchView('support'); });
+    var gs = $('globalSearch');
+    function focusSearch() { if (gs && gs.offsetParent !== null) { gs.focus(); gs.select(); } else switchView('users'); }
+    on($('kbdHint'), 'click', focusSearch);
+    on(gs, 'keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      S.users.q = gs.value.trim(); S.users.page = 1;
+      switchView('users');
+      gs.blur();
+    });
+    document.addEventListener('keydown', function (e) {
+      if ((e.metaKey || e.ctrlKey) && String(e.key).toLowerCase() === 'k' && !$('app').classList.contains('hidden')) { e.preventDefault(); focusSearch(); }
+      if (e.key === 'Escape') document.body.classList.remove('nav-open');
+    });
     on($('menuBtn'), 'click', function () { document.body.classList.toggle('nav-open'); });
     on($('modalWrap'), 'click', function (e) { if (e.target === $('modalWrap')) $('modalWrap').classList.add('hidden'); });
   }
