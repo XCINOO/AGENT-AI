@@ -83,9 +83,14 @@
       <button class="navbtn" data-view="admins" id="navAdmins"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>مدیران</button>
     </nav>
     <div class="side-foot">
-      <div id="meBadge" class="role-badge"></div>
-      <button id="admLogout" class="btn btn-ghost btn-sm">خروج</button>
+      <div class="me-card">
+        <div id="meRole" class="role-badge"></div>
+        <div id="meEmail" class="me-email dir-ltr"></div>
+      </div>
+      <button id="admLogout" class="btn btn-ghost btn-sm btn-wide">خروج</button>
     </div>
+    <!-- keep meBadge for any legacy JS references -->
+    <div id="meBadge" class="hidden"></div>
   </aside>
 
   <div id="main">

@@ -403,6 +403,8 @@
     $('setup').classList.add('hidden');
     $('app').classList.remove('hidden');
     $('meBadge').textContent = roleLabel(me.role) + ' · ' + (me.email || '');
+    var roleEl = $('meRole'); if (roleEl) roleEl.textContent = roleLabel(me.role);
+    var emailEl = $('meEmail'); if (emailEl) emailEl.textContent = me.email || '';
     $('navAdmins').classList.toggle('hidden', !isOwner());
   }
   function roleLabel(r) { return { owner: 'مالک', admin: 'مدیر', support: 'پشتیبانی', analyst: 'تحلیل‌گر' }[r] || r; }
