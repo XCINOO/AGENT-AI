@@ -5,8 +5,6 @@
   var afterKey = 'support_after_';
   var unreadKey = 'support_unread_';
   var toastFlag = 'support_toast_shown';
-  var seenKey = 'support_seen_';
-  var SEEN_MAX = 300;
   var busy = false;
   var toastEl = null;
   var toastT = null;
@@ -92,27 +90,6 @@
     } catch (e) { return null; }
   }
 
-  /* ids of admin replies already displayed/counted for a thread (persisted, so reloads and extra tabs never repeat them) */
-  function msgKey(m) {
-    if (m.id !== undefined && m.id !== null && m.id !== '') return 'id:' + m.id;
-    return 'ts:' + (m.created_at || '') + '|' + (m.sender || '') + '|' + (m.body || '');
-  }
-  function loadSeen(tid) {
-    try {
-      var a = JSON.parse(localStorage.getItem(seenKey + tid) || '[]');
-      return Array.isArray(a) ? a : [];
-    } catch (e) { return []; }
-  }
-  function saveSeen(tid, list) {
-    try { localStorage.setItem(seenKey + tid, JSON.stringify(list.slice(-SEEN_MAX))); } catch (e) {}
-  }
-  /* the "after" cursor only ever moves forward */
-  function newer(a, b) {
-    var x = Date.parse(a), y = Date.parse(b);
-    if (!isNaN(x) && !isNaN(y)) return x > y;
-    return String(a) > String(b);
-  }
-
   function markRead() {
     setUnread(0);
     try { sessionStorage.removeItem(toastFlag); } catch (e) {}
@@ -133,25 +110,13 @@
       var d = await r.json();
       var msgs = d.messages || [];
       var adminNew = 0;
-      var seenList = loadSeen(tid), seenSet = {};
-      seenList.forEach(function (k) { seenSet[k] = 1; });
-      var dirty = false;
       msgs.forEach(function (m) {
-        if (!m) return;
         if (m.sender === 'admin' && m.body) {
-          var k = msgKey(m);
-          if (!seenSet[k]) {
-            seenSet[k] = 1; seenList.push(k); dirty = true;
-            show((typeof I18N !== 'undefined' ? I18N.t('support.replyPrefix') : 'Support: ') + m.body);
-            adminNew += 1;
-          }
+          show((typeof I18N !== 'undefined' ? I18N.t('support.replyPrefix') : 'Support: ') + m.body);
+          adminNew += 1;
         }
-        if (m.created_at) {
-          var cur = localStorage.getItem(afterKey + tid);
-          if (!cur || newer(m.created_at, cur)) localStorage.setItem(afterKey + tid, m.created_at);
-        }
+        if (m.created_at) localStorage.setItem(afterKey + tid, m.created_at);
       });
-      if (dirty) saveSeen(tid, seenList);
       if (isOpen()) markRead();
       else if (adminNew) {
         var next = getUnread() + adminNew;

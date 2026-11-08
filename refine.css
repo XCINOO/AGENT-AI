@@ -1,0 +1,204 @@
+/* =====================================================================
+   UNKNOWN AI — "Refined Glass" layer
+   Loaded last. Visual-only: uses existing tokens (--grad, --orb-*, --accent,
+   --surface*, --line*, --glass, --text*). No IDs/classes/logic changed.
+   ===================================================================== */
+:root{
+  --r-sm:10px; --r-md:14px; --r-lg:20px; --r-xl:26px;
+  --edge:inset 0 1px 0 rgba(255,255,255,.06);          /* top highlight */
+  --card-bg:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.025));
+  --card-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 10px 30px -12px rgba(0,0,0,.6);
+  --lift:0 14px 34px -14px rgba(0,0,0,.7),0 0 0 1px var(--line-2);
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+
+/* ---------- Sidebar: floating rounded panel ---------- */
+@media (min-width:861px){
+  .app .side{
+    margin:12px; height:calc(100% - 24px); border-radius:var(--r-xl);
+    border:1px solid var(--line-2) !important; box-shadow:var(--card-shadow);
+    backdrop-filter:blur(22px) saturate(1.2); -webkit-backdrop-filter:blur(22px) saturate(1.2);
+  }
+}
+.side .brand{padding-bottom:6px}
+
+/* ---------- Icon buttons: soft squircles ---------- */
+.iconbtn{
+  border-radius:var(--r-sm) !important; border:1px solid transparent !important;
+  transition:background .2s var(--ease),border-color .2s var(--ease),transform .15s var(--ease),color .2s;
+}
+.iconbtn:hover{background:var(--surface-2) !important;border-color:var(--line) !important;transform:translateY(-1px)}
+.iconbtn:active{transform:scale(.94)}
+.iconbtn svg{stroke-width:1.75;transition:transform .25s var(--ease)}
+.iconbtn:hover svg{transform:scale(1.06)}
+#themeToggle:hover svg{transform:rotate(25deg) scale(1.06)}
+.topctl{gap:4px}
+.topctl .iconbtn{width:38px;height:38px}
+
+/* ---------- Sidebar controls ---------- */
+.side .new{
+  border-radius:var(--r-md) !important; background:var(--card-bg) !important;
+  border:1px solid var(--line-2) !important; box-shadow:var(--card-shadow);
+  transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s;
+}
+.side .new:hover{transform:translateY(-1px);border-color:var(--accent-line) !important;box-shadow:var(--lift),0 0 24px -10px var(--orb-b)}
+.side .new:active{transform:scale(.985)}
+.searchbox{border-radius:var(--r-md) !important;border:1px solid var(--line) !important;box-shadow:var(--edge);transition:border-color .2s,box-shadow .2s}
+.searchbox:focus-within{border-color:var(--accent-line) !important;box-shadow:0 0 0 4px var(--ring)}
+
+.chatitem{
+  position:relative;border-radius:var(--r-sm) !important;padding-inline-start:36px !important;
+  border:1px solid transparent;transition:background .18s var(--ease),border-color .18s,transform .18s var(--ease);
+}
+.chatitem::before{
+  content:"";position:absolute;inset-inline-start:12px;top:50%;width:15px;height:15px;transform:translateY(-50%);
+  background:currentColor;opacity:.55;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.chatitem:hover{background:var(--hover-bg) !important;border-color:var(--line)}
+.chatitem.active,.chatitem[aria-current="true"]{background:var(--card-bg) !important;border-color:var(--line-2);box-shadow:var(--card-shadow)}
+.chatitem.active::before{background:var(--grad);opacity:1}
+
+/* Cards (usage / support) */
+.token-card,.support-card{
+  border-radius:var(--r-lg) !important;background:var(--card-bg) !important;
+  border:1px solid var(--line-2) !important;box-shadow:var(--card-shadow);
+  transition:transform .22s var(--ease),box-shadow .22s var(--ease),border-color .22s;
+}
+.token-card:hover,.support-card:hover{transform:translateY(-2px);box-shadow:var(--lift)}
+.token-bar{border-radius:99px;overflow:hidden}
+.support-card button{border-radius:var(--r-sm) !important;transition:background .2s,border-color .2s,transform .15s}
+.support-card button:hover{border-color:var(--accent-line) !important;background:var(--surface-2) !important}
+.account{border-radius:var(--r-md);padding:8px !important;transition:background .2s}
+.account:hover{background:var(--hover-bg)}
+.userdot{box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--line-2)}
+
+/* ---------- Messages ---------- */
+.msg .bubble{border-radius:var(--r-lg) !important;line-height:1.75}
+.msg.user .bubble{border:1px solid var(--line-2);box-shadow:var(--card-shadow)}
+.msg.ai .bubble{background:transparent !important;border:0 !important;box-shadow:none !important}
+.msg.ai .avatar{border-radius:12px !important;box-shadow:0 0 0 1px var(--line-2),0 6px 18px -6px var(--orb-b)}
+.msg.enter{animation:uaRise .38s var(--ease) both}
+@keyframes uaRise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg-img{border-radius:var(--r-md) !important;border:1px solid var(--line-2);transition:transform .25s var(--ease)}
+.msg-img:hover{transform:scale(1.015)}
+.typing-bubble span{background:var(--grad) !important}
+
+/* ---------- Composer ---------- */
+.composer{
+  border-radius:var(--r-xl) !important;background:var(--glass) !important;
+  border:1px solid var(--line-2) !important;
+  box-shadow:var(--edge),0 18px 50px -20px rgba(0,0,0,.8) !important;
+  backdrop-filter:blur(22px) saturate(1.2);-webkit-backdrop-filter:blur(22px) saturate(1.2);
+  transition:border-color .25s var(--ease),box-shadow .25s var(--ease);
+}
+.composer:focus-within{border-color:var(--composer-focus) !important;box-shadow:var(--edge),0 0 0 4px var(--ring),0 18px 50px -20px rgba(0,0,0,.8) !important}
+.composer textarea{transition:height .12s ease;line-height:1.6}
+.attachbtn{border:1px solid var(--line) !important;background:var(--surface) !important}
+.attachbtn:hover{border-color:var(--accent-line) !important}
+.attachbtn:hover svg{transform:rotate(90deg)}
+.attach-previews img,.attach-previews .preview{border-radius:var(--r-sm) !important;border:1px solid var(--line-2)}
+.model-btn{
+  border-radius:var(--r-sm) !important;border:1px solid var(--line-2) !important;background:var(--surface) !important;
+  box-shadow:var(--edge);transition:border-color .2s,background .2s,transform .15s;
+}
+.model-btn:hover{border-color:var(--accent-line) !important;background:var(--surface-2) !important}
+.model-menu{
+  border-radius:var(--r-md) !important;border:1px solid var(--line-2) !important;box-shadow:var(--shadow-pop) !important;
+  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);transform-origin:bottom;
+}
+.model-menu.open,.model-picker.open .model-menu{animation:uaPop .18s var(--ease)}
+@keyframes uaPop{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
+.send{
+  border-radius:14px !important;transition:transform .15s var(--ease),box-shadow .25s var(--ease),filter .2s;
+  box-shadow:0 8px 22px -8px var(--orb-b);
+}
+.send:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 28px -6px var(--orb-b);filter:brightness(1.08)}
+.send:active:not(:disabled){transform:scale(.93)}
+.send svg{stroke-width:2.2}
+
+/* ---------- Modals / panels ---------- */
+.support-panel,.unipanel,.unicard,.settings-section{
+  border-radius:var(--r-xl) !important;border:1px solid var(--line-2) !important;box-shadow:var(--edge),var(--shadow-pop) !important;
+}
+.support-modal[aria-hidden="false"] .support-panel{animation:uaPop .22s var(--ease)}
+.settings-tab{border-radius:var(--r-sm) !important;transition:background .2s,color .2s}
+.settings-tab:hover{background:var(--hover-bg)}
+.settings-primary,.authbutton{border-radius:var(--r-md) !important;transition:transform .15s var(--ease),filter .2s}
+.settings-primary:hover,.authbutton:hover{filter:brightness(1.08);transform:translateY(-1px)}
+input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea{transition:border-color .2s,box-shadow .2s}
+.auth input:focus,.settings-row input:focus,#supportInput:focus{box-shadow:0 0 0 4px var(--ring) !important;border-color:var(--accent-line) !important;outline:none}
+
+/* Refined focus ring everywhere */
+:focus-visible{outline:2px solid var(--accent-line) !important;outline-offset:2px;border-radius:var(--r-sm)}
+
+/* Touch targets */
+@media (hover:none){.iconbtn,.send,.model-btn{min-width:42px;min-height:42px}.iconbtn:hover,.side .new:hover,.token-card:hover,.support-card:hover{transform:none}}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+/* ---------- Settings modal: prevent section content touching/clipping card edges ---------- */
+.settings-panel{
+  box-sizing:border-box;
+  width:min(600px, calc(100vw - 36px));
+  min-width:0;
+  overflow-x:hidden;
+}
+.settings-content,
+.settings-content > .settings-section{
+  min-width:0;
+  max-width:100%;
+  box-sizing:border-box;
+}
+.settings-content > .settings-section{
+  padding:16px;
+  margin:10px 0;
+  overflow-wrap:anywhere;
+}
+.settings-content > .settings-section:first-child{margin-top:0}
+.settings-content > .settings-section:last-child{margin-bottom:0}
+.settings-section label,
+.settings-section h3,
+.settings-section p,
+.settings-section strong{
+  max-width:100%;
+  overflow-wrap:anywhere;
+}
+.settings-section .settings-input,
+.settings-section .settings-current,
+.settings-section textarea,
+.settings-section select{
+  display:block;
+  box-sizing:border-box;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
+.settings-section .settings-help{
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+.settings-row,
+.settings-row > div{
+  min-width:0;
+  max-width:100%;
+}
+.settings-row > div{flex:1 1 auto}
+.settings-row > button{
+  flex:0 1 auto;
+  max-width:100%;
+  white-space:normal;
+}
+@media(max-width:600px){
+  .settings-backdrop{padding:8px}
+  .settings-panel{
+    width:100%;
+    max-width:100%;
+    padding:16px;
+    max-height:94dvh;
+  }
+  .settings-content > .settings-section{padding:14px 12px}
+  .settings-tabs{max-width:100%}
+  .settings-tab{min-width:0;overflow-wrap:anywhere}
+}

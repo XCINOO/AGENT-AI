@@ -37,13 +37,8 @@
   /* دسترسی امن به متغیرهای سراسری اسکریپت اصلی */
   function curUser(){try{return user}catch(e){return null}}
   function curChat(){try{return currentChat}catch(e){return null}}
-  function curSb(){try{return sb}catch(e){return null}}
-  /* title exactly as the history list renders it (the default title is translated) */
-  function shownTitle(t){
-    var raw=(t&&t.title)||'';
-    try{if(typeof chatTitle==='function')return chatTitle({title:raw})}catch(e){}
-    return raw||'گفتگوی جدید';
-  }
+  /* عنوان آیتم تاریخچه را همان‌طور که اسکریپت اصلی نمایش می‌دهد می‌خواند (در انگلیسی «New chat») */
+  function shownTitle(c){try{return chatTitle(c)}catch(e){return c&&c.title||'گفتگوی جدید'}}
 
   /* =================================================================
      ۱) متن چرخشی زیر لوگو
@@ -244,7 +239,7 @@
     if(si&&si.value.trim())si.dispatchEvent(new Event('input'));   /* نتایج جست‌وجوی باز هم تازه شود */
   }
   async function deleteOne(id){
-    var u=curUser(),sb=curSb();if(!u||!sb)throw new Error('no user');
+    var u=curUser();if(!u)throw new Error('no user');
     var r1=await sb.from('messages').delete().eq('chat_id',id).eq('user_id',u.id);
     if(r1.error)console.warn('messages delete',r1.error);
     var r2=await sb.from('chats').delete().eq('id',id).eq('user_id',u.id).select('id');
@@ -257,7 +252,7 @@
     await refreshAfterDelete(false,id);
   }
   async function deleteAll(){
-    var u=curUser(),sb=curSb();if(!u||!sb)throw new Error('no user');
+    var u=curUser();if(!u)throw new Error('no user');
     var r1=await sb.from('messages').delete().eq('user_id',u.id);
     if(r1.error)console.warn('messages delete',r1.error);
     var r2=await sb.from('chats').delete().eq('user_id',u.id).select('id');
@@ -268,7 +263,7 @@
     await refreshAfterDelete(true,null);
   }
   function askDeleteOne(t){
-    var title=String(shownTitle(t));
+    var title=String(shownTitle(t)||'گفتگوی جدید');
     if(title.length>60)title=title.slice(0,60)+'…';
     showDialog({title:TXT.single,sub:title,keep:TXT.keep,del:TXT.del,returnTo:t.btn,run:function(){return deleteOne(t.id)}});
   }
