@@ -10,6 +10,8 @@
   --card-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 10px 30px -12px rgba(0,0,0,.6);
   --lift:0 14px 34px -14px rgba(0,0,0,.7),0 0 0 1px var(--line-2);
   --ease:cubic-bezier(.2,.8,.2,1);
+  --home-composer-shadow:0 5px 18px -8px color-mix(in srgb,var(--text) 20%,transparent);
+  --home-logo-shadow:0 0 26px -6px color-mix(in srgb,var(--orb-c) 24%,transparent);
 }
 
 /* ---------- Sidebar: floating rounded panel ---------- */
@@ -86,6 +88,44 @@
 .typing-bubble span{background:var(--grad) !important}
 
 /* ---------- Composer ---------- */
+/* Home: greeting and composer form one flowing block, never a fixed overlay.
+   Existing active-chat positioning and keyboard handling remain unchanged. */
+.main:not(.chatting) .chat{flex:0 0 auto;margin-top:clamp(84px,18dvh,200px)}
+.main:not(.chatting) .messages{padding:0 20px}
+.main:not(.chatting) .chat{overflow:visible}
+.main:not(.chatting) .welcomein::before{width:120px;height:120px;box-shadow:var(--home-logo-shadow)}
+.main:not(.chatting) .logo-welcome{width:144px;opacity:.8}
+.main:not(.chatting) .welcome{min-height:0;padding:0}
+.main:not(.chatting) .welcomein{margin-top:0;max-width:100%}
+.main:not(.chatting) .welcome h1{font-size:28px;letter-spacing:0;overflow-wrap:anywhere}
+.main:not(.chatting) .composerwrap{position:relative;bottom:auto;margin-top:24px;padding-top:0;background:none}
+.main:not(.chatting) .composer{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;padding:12px}
+.main:not(.chatting) .composer-inner{grid-column:1/-1;grid-row:1;min-width:0}
+.main:not(.chatting) .composer textarea{min-height:64px}
+.main:not(.chatting) .attachbtn{grid-column:1;grid-row:2}
+.main:not(.chatting) .model-picker{grid-column:2;grid-row:2;justify-self:end;min-width:0;max-width:100%}
+.main:not(.chatting) .model-btn{max-width:100%}
+.main:not(.chatting) #modelName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.main:not(.chatting) .send{grid-column:3;grid-row:2}
+.main:not(.chatting) .composer{box-shadow:var(--edge),var(--home-composer-shadow) !important}
+.main:not(.chatting) .composer:focus-within{box-shadow:var(--edge),var(--home-composer-shadow),0 0 0 3px var(--ring) !important}
+.main:not(.chatting) .hint{max-width:var(--col);margin:16px auto 0;padding:0 8px;color:var(--text-2);opacity:1;line-height:1.7;overflow-wrap:anywhere}
+.main:not(.chatting) .composerwrap .suggest{width:min(var(--col),100%);margin:22px auto 0;grid-template-columns:repeat(2,minmax(0,1fr))}
+.main:not(.chatting){overflow-y:auto}
+@media(max-width:860px){
+  .main:not(.chatting) .messages{padding-inline:16px}
+  .main:not(.chatting) .welcome h1{font-size:22px}
+  .main:not(.chatting) .welcomein::before{width:104px;height:104px}
+  .main:not(.chatting) .composerwrap{margin-top:20px}
+}
+@media(max-height:560px){
+  .main:not(.chatting) .chat{margin-top:76px}
+  .main:not(.chatting) .welcomein::before{width:56px;height:56px;margin-bottom:10px}
+  .main:not(.chatting) .logo-welcome{width:120px;margin-bottom:10px}
+  .main:not(.chatting) .welcome h1{font-size:20px}
+  .main:not(.chatting) .composerwrap{margin-top:12px}
+  .main:not(.chatting) .composer textarea{min-height:44px}
+}
 .composer{
   border-radius:var(--r-xl) !important;background:var(--glass) !important;
   border:1px solid var(--line-2) !important;
@@ -106,8 +146,15 @@
 .model-btn:hover{border-color:var(--accent-line) !important;background:var(--surface-2) !important}
 .model-menu{
   border-radius:var(--r-md) !important;border:1px solid var(--line-2) !important;box-shadow:var(--shadow-pop) !important;
-  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);transform-origin:bottom;
+  background:var(--bg) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;transform-origin:bottom;
+  width:260px;min-width:0;max-width:calc(100vw - 112px);max-height:min(380px,55dvh);overflow-y:auto;padding:8px;
 }
+.model-item{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;padding:12px;text-align:start;border:1px solid transparent;border-radius:var(--r-sm);transition:background .2s,border-color .2s}
+.model-item.active{background:var(--accent-soft);border-color:var(--accent-line)}
+.model-item .name,.model-item .desc{white-space:normal;overflow-wrap:anywhere}
+.model-item .mi{border:1px solid var(--line);color:var(--accent)}
+html[dir="rtl"] .model-menu{right:auto;left:0}
+.main:has(.model-menu.open) .composer{backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
 .model-menu.open,.model-picker.open .model-menu{animation:uaPop .18s var(--ease)}
 @keyframes uaPop{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
 .send{
@@ -123,6 +170,14 @@
   border-radius:var(--r-xl) !important;border:1px solid var(--line-2) !important;box-shadow:var(--edge),var(--shadow-pop) !important;
 }
 .support-modal[aria-hidden="false"] .support-panel{animation:uaPop .22s var(--ease)}
+/* Keep content clear of the rounded settings edges in both directions. */
+.settings-content{min-width:0}
+.settings-section{padding:18px;min-width:0;overflow-wrap:anywhere}
+.settings-section + .settings-section{margin-top:12px}
+.settings-section .settings-input,.settings-section .settings-current{max-width:100%;min-width:0;box-sizing:border-box}
+.settings-row{flex-wrap:wrap}
+.settings-row > div{flex:1 1 160px;min-width:0}
+.settings-section button{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .settings-tab{border-radius:var(--r-sm) !important;transition:background .2s,color .2s}
 .settings-tab:hover{background:var(--hover-bg)}
 .settings-primary,.authbutton{border-radius:var(--r-md) !important;transition:transform .15s var(--ease),filter .2s}
@@ -137,68 +192,3 @@ input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea{tr
 @media (hover:none){.iconbtn,.send,.model-btn{min-width:42px;min-height:42px}.iconbtn:hover,.side .new:hover,.token-card:hover,.support-card:hover{transform:none}}
 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
-
-/* ---------- Settings modal: prevent section content touching/clipping card edges ---------- */
-.settings-panel{
-  box-sizing:border-box;
-  width:min(600px, calc(100vw - 36px));
-  min-width:0;
-  overflow-x:hidden;
-}
-.settings-content,
-.settings-content > .settings-section{
-  min-width:0;
-  max-width:100%;
-  box-sizing:border-box;
-}
-.settings-content > .settings-section{
-  padding:16px;
-  margin:10px 0;
-  overflow-wrap:anywhere;
-}
-.settings-content > .settings-section:first-child{margin-top:0}
-.settings-content > .settings-section:last-child{margin-bottom:0}
-.settings-section label,
-.settings-section h3,
-.settings-section p,
-.settings-section strong{
-  max-width:100%;
-  overflow-wrap:anywhere;
-}
-.settings-section .settings-input,
-.settings-section .settings-current,
-.settings-section textarea,
-.settings-section select{
-  display:block;
-  box-sizing:border-box;
-  width:100%;
-  max-width:100%;
-  min-width:0;
-}
-.settings-section .settings-help{
-  white-space:normal;
-  overflow-wrap:anywhere;
-}
-.settings-row,
-.settings-row > div{
-  min-width:0;
-  max-width:100%;
-}
-.settings-row > div{flex:1 1 auto}
-.settings-row > button{
-  flex:0 1 auto;
-  max-width:100%;
-  white-space:normal;
-}
-@media(max-width:600px){
-  .settings-backdrop{padding:8px}
-  .settings-panel{
-    width:100%;
-    max-width:100%;
-    padding:16px;
-    max-height:94dvh;
-  }
-  .settings-content > .settings-section{padding:14px 12px}
-  .settings-tabs{max-width:100%}
-  .settings-tab{min-width:0;overflow-wrap:anywhere}
-}

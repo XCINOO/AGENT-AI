@@ -1,7 +1,7 @@
 /* =====================================================================
    CHAT EXTRAS v4 — اسکریپت مستقل (فقط لایه‌ی رابط کاربری)
    - حذف گفتگو (منوی سه‌نقطه + پنجره‌ی تأیید) و «پاک کردن همه تاریخچه»
-   - متن چرخشی زیر لوگوی صفحه‌ی اصلی
+   - خوشامد متناسب با ساعت محلی مرورگر در صفحه‌ی اصلی
    - هیچ دیتابیس/API/سیستم ذخیره‌سازی جدیدی نمی‌سازد: حذف با همان کلاینت Supabase
      و همان جدول‌های chats و messages انجام می‌شود که خود سایت استفاده می‌کند.
    - به‌دلیل CSP سایت، این کد در فایل جدا آمده تا hash اسکریپت‌های inline تغییر نکند.
@@ -28,8 +28,6 @@
     menuDel:'حذف گفت'+ZW+'وگو',
     more:'گزینه'+ZW+'های گفت'+ZW+'وگو'
   };
-  var ROTATE_TEXT='جیبامو نگرد، اون چیزی که دنبالشی تو مخمه :)';
-  var ROTATE_MS=4000;
 
   var DOTS='<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="5.5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="18.5" cy="12" r="1.7"/></svg>';
   var TRASH='<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.5 7h15M9.5 7V5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v2M6.5 7l.8 11.2A1.8 1.8 0 0 0 9.1 20h5.8a1.8 1.8 0 0 0 1.8-1.8L17.5 7M10 11v5M14 11v5"/></svg>';
@@ -41,25 +39,18 @@
   function shownTitle(c){try{return chatTitle(c)}catch(e){return c&&c.title||'گفتگوی جدید'}}
 
   /* =================================================================
-     ۱) متن چرخشی زیر لوگو
-     همه‌ی متن‌ها در یک سلول grid روی هم قرار می‌گیرند؛ پس ارتفاع بلوک برابر
-     بلندترین متن است و با عوض‌شدن متن هیچ چیزی جابه‌جا نمی‌شود.
+     ۱) خوشامد با ساعت محلی مرورگر؛ بدون تغییر زمان‌های سرور یا سهمیه
      ================================================================= */
-  var rotTimer=null;
-  function stopRotate(){if(rotTimer){clearInterval(rotTimer);rotTimer=null}}
-  function startRotate(h1){
-    stopRotate();
-    var list=h1.querySelectorAll('.rt-item');
-    if(list.length<2)return;
-    var cur=0;
-    rotTimer=setInterval(function(){
-      if(!h1.isConnected){stopRotate();return}
-      if(document.hidden)return;
-      list[cur].classList.remove('on');list[cur].setAttribute('aria-hidden','true');
-      cur=(cur+1)%list.length;
-      list[cur].classList.add('on');list[cur].removeAttribute('aria-hidden');
-    },ROTATE_MS);
+  function greetingPeriod(hour){
+    if(hour>=5&&hour<12)return 'morning';
+    if(hour>=12&&hour<17)return 'afternoon';
+    if(hour>=17&&hour<20)return 'evening';
+    return 'night';
   }
+  var GREETINGS={
+    fa:{morning:'صبح بخیر! چطور می‌تونم کمکت کنم؟',afternoon:'ظهر بخیر! چطور می‌تونم کمکت کنم؟',evening:'عصر بخیر! چطور می‌تونم کمکت کنم؟',night:'شب بخیر! چطور می‌تونم کمکت کنم؟'},
+    en:{morning:'Good morning! How can I help?',afternoon:'Good afternoon! How can I help?',evening:'Good evening! How can I help?',night:'Up tonight? How can I help?'}
+  };
   /* پس‌زمینه فقط روی صفحه‌ی خوش‌آمد دیده می‌شود؛ با شروع چت (یا باز کردن یک گفتگو) محو می‌شود */
   var mainEl=document.querySelector('.main');
   function setChatting(){
@@ -69,22 +60,25 @@
   function syncWelcome(){
     setChatting();
     var h1=msgsEl.querySelector('.welcome h1');
-    if(!h1){stopRotate();return}
-    if(h1.getAttribute('data-rt'))return;
-    var orig=(h1.textContent||'').trim();
-    var texts=[ROTATE_TEXT];
-    if(orig&&orig!==ROTATE_TEXT)texts.push(orig);   /* متن قبلی حفظ می‌شود و در چرخه می‌ماند */
-    h1.textContent='';
-    h1.classList.add('rt');h1.setAttribute('data-rt','1');
-    texts.forEach(function(t,i){
-      var s=document.createElement('span');
-      s.className='rt-item'+(i===0?' on':'');
-      if(i)s.setAttribute('aria-hidden','true');
-      s.textContent=t;h1.appendChild(s);
-    });
-    startRotate(h1);
+    var wrap=document.querySelector('.composerwrap');
+    if(!h1){var old=wrap&&wrap.querySelector('.suggest');if(old)old.remove();return}
+    var suggestions=msgsEl.querySelector('.suggest');
+    if(suggestions&&wrap)wrap.appendChild(suggestions);
+    var period=greetingPeriod(new Date().getHours());
+    var lang=window.I18N&&I18N.lang==='en'?'en':'fa';
+    // Prevent the static localization pass from replacing the live greeting.
+    h1.removeAttribute('data-i18n');
+    h1.classList.remove('rt');
+    h1.dataset.period=period;
+    var text=GREETINGS[lang][period];
+    if(h1.textContent!==text)h1.textContent=text;
   }
-  new MutationObserver(syncWelcome).observe(msgsEl,{childList:true});
+  new MutationObserver(syncWelcome).observe(msgsEl,{childList:true,subtree:true});
+  document.addEventListener('langchange',syncWelcome);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)syncWelcome()});
+  window.addEventListener('focus',syncWelcome);
+  window.addEventListener('pageshow',syncWelcome);
+  setInterval(function(){if(!document.hidden)syncWelcome()},30000);
   syncWelcome();
 
   /* =================================================================

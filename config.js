@@ -9,7 +9,7 @@ const APP_CONFIG = {
   // After deploy, set this to your workers.dev or custom domain, e.g.:
   //   "https://unknown-ai-backend.<account>.workers.dev"
   // Chat / usage / support paths are derived as API_BASE_URL + "/api/..."
-  API_BASE_URL: "https://unknown-ai-backend-production.up.railway.app",
+  API_BASE_URL: "https://s422nb.bot-keep.xyz",
 
   // Leave empty until a Worker activity endpoint exists (empty = tracking off).
   ACTIVITY_ENDPOINT: ""

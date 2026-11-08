@@ -26,7 +26,7 @@
   function lang() { return document.documentElement.getAttribute('lang') === 'en' ? 'en' : 'fa'; }
   function render() {
     var w = document.querySelector('#messages .welcomein');
-    if (!w || w.querySelector('.suggest')) return;
+    if (!w || document.querySelector('.main .suggest')) return;
     var box = document.createElement('div');
     box.className = 'suggest';
     SETS[lang()].forEach(function (s, idx) {
@@ -53,7 +53,7 @@
   var m = g('messages');
   if (m && window.MutationObserver) new MutationObserver(render).observe(m, { childList: true });
   document.addEventListener('langchange', function () {
-    var old = document.querySelector('#messages .suggest');
+    var old = document.querySelector('.main .suggest');
     if (old) old.remove();
     render();
   });
