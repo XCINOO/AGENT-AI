@@ -1,16 +1,1 @@
-/* Streaming reply styles — uses existing Unknown AI tokens only */
-.bubble.ua-streaming > :last-child::after{
-  content:"";display:inline-block;width:.5em;height:1em;margin-inline-start:2px;vertical-align:-.12em;
-  border-radius:2px;background:var(--grad);animation:uaCaret 1s steps(2) infinite;
-}
-@keyframes uaCaret{50%{opacity:0}}
-.bubble p{margin:0 0 .35em}
-.bubble .ua-gap{height:.4em}
-.bubble .ua-h{font-weight:700;margin:.5em 0 .3em}
-.bubble ul,.bubble ol{margin:.2em 0 .5em;padding-inline-start:1.3em}
-.bubble code{background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:.05em .35em;font-size:.92em}
-.bubble pre.ua-code{background:var(--surface);border:1px solid var(--line-2);border-radius:10px;padding:.75em .9em;overflow-x:auto;margin:.4em 0;text-align:left}
-.bubble pre.ua-code code{background:none;border:0;padding:0;white-space:pre}
-#send.ua-stop svg{display:none}
-#send.ua-stop::before{content:"";width:12px;height:12px;border-radius:3px;background:currentColor;display:block}
-@media (prefers-reduced-motion:reduce){.bubble.ua-streaming > :last-child::after{animation:none}}
+.bubble.ua-streaming>:last-child:after{content:"";display:inline-block;width:.5em;height:1em;margin-inline-start:2px;vertical-align:-.12em;border-radius:2px;background:var(--grad);animation:uaCaret 1s steps(2) infinite}@keyframes uaCaret{50%{opacity:0}}.bubble p{margin:0 0 .35em}.bubble .ua-gap{height:.4em}.bubble .ua-h{font-weight:700;margin:.5em 0 .3em}.bubble ul,.bubble ol{margin:.2em 0 .5em;padding-inline-start:1.3em}.bubble code{background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:.05em .35em;font-size:.92em}.bubble pre.ua-code{background:var(--surface);border:1px solid var(--line-2);border-radius:10px;padding:.75em .9em;overflow-x:auto;margin:.4em 0;text-align:left}.bubble pre.ua-code code{background:none;border:0;padding:0;white-space:pre}#send.ua-stop svg{display:none}#send.ua-stop:before{content:"";width:12px;height:12px;border-radius:3px;background:currentColor;display:block}@media(prefers-reduced-motion:reduce){.bubble.ua-streaming>:last-child:after{animation:none}}
