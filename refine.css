@@ -93,29 +93,27 @@
 .main:not(.chatting) .chat{flex:0 0 auto;margin-top:clamp(84px,18dvh,200px)}
 .main:not(.chatting) .messages{padding:0 20px}
 .main:not(.chatting) .chat{overflow:visible}
-.main:not(.chatting) .welcomein::before{width:120px;height:120px;box-shadow:var(--home-logo-shadow)}
+.main:not(.chatting) .welcomein::before{width:104px;height:104px;box-shadow:var(--home-logo-shadow)}
 .main:not(.chatting) .logo-welcome{width:144px;opacity:.8}
 .main:not(.chatting) .welcome{min-height:0;padding:0}
 .main:not(.chatting) .welcomein{margin-top:0;max-width:100%}
 .main:not(.chatting) .welcome h1{font-size:28px;letter-spacing:0;overflow-wrap:anywhere}
 .main:not(.chatting) .composerwrap{position:relative;bottom:auto;margin-top:24px;padding-top:0;background:none}
-.main:not(.chatting) .composer{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;padding:12px}
-.main:not(.chatting) .composer-inner{grid-column:1/-1;grid-row:1;min-width:0}
-.main:not(.chatting) .composer textarea{min-height:64px}
-.main:not(.chatting) .attachbtn{grid-column:1;grid-row:2}
-.main:not(.chatting) .model-picker{grid-column:2;grid-row:2;justify-self:end;min-width:0;max-width:100%}
+.main:not(.chatting) .composer{display:flex;align-items:center;gap:8px;padding:6px 8px}
+.main:not(.chatting) .composer-inner{flex:1;min-width:0}
+.main:not(.chatting) .composer textarea{min-height:0}
+.main:not(.chatting) .model-picker{min-width:0;max-width:100%}
 .main:not(.chatting) .model-btn{max-width:100%}
 .main:not(.chatting) #modelName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.main:not(.chatting) .send{grid-column:3;grid-row:2}
-.main:not(.chatting) .composer{box-shadow:var(--edge),var(--home-composer-shadow) !important}
-.main:not(.chatting) .composer:focus-within{box-shadow:var(--edge),var(--home-composer-shadow),0 0 0 3px var(--ring) !important}
+.main:not(.chatting) .composer{box-shadow:var(--home-composer-shadow) !important}
+.main:not(.chatting) .composer:focus-within{box-shadow:var(--home-composer-shadow) !important}
 .main:not(.chatting) .hint{max-width:var(--col);margin:16px auto 0;padding:0 8px;color:var(--text-2);opacity:1;line-height:1.7;overflow-wrap:anywhere}
 .main:not(.chatting) .composerwrap .suggest{width:min(var(--col),100%);margin:22px auto 0;grid-template-columns:repeat(2,minmax(0,1fr))}
 .main:not(.chatting){overflow-y:auto}
 @media(max-width:860px){
   .main:not(.chatting) .messages{padding-inline:16px}
   .main:not(.chatting) .welcome h1{font-size:22px}
-  .main:not(.chatting) .welcomein::before{width:104px;height:104px}
+  .main:not(.chatting) .welcomein::before{width:96px;height:96px}
   .main:not(.chatting) .composerwrap{margin-top:20px}
 }
 @media(max-height:560px){
@@ -124,16 +122,16 @@
   .main:not(.chatting) .logo-welcome{width:120px;margin-bottom:10px}
   .main:not(.chatting) .welcome h1{font-size:20px}
   .main:not(.chatting) .composerwrap{margin-top:12px}
-  .main:not(.chatting) .composer textarea{min-height:44px}
+  .main:not(.chatting) .composer textarea{min-height:36px}
 }
 .composer{
   border-radius:var(--r-xl) !important;background:var(--glass) !important;
   border:1px solid var(--line-2) !important;
-  box-shadow:var(--edge),0 18px 50px -20px rgba(0,0,0,.8) !important;
+  box-shadow:0 18px 50px -20px rgba(0,0,0,.8) !important;
   backdrop-filter:blur(22px) saturate(1.2);-webkit-backdrop-filter:blur(22px) saturate(1.2);
   transition:border-color .25s var(--ease),box-shadow .25s var(--ease);
 }
-.composer:focus-within{border-color:var(--composer-focus) !important;box-shadow:var(--edge),0 0 0 4px var(--ring),0 18px 50px -20px rgba(0,0,0,.8) !important}
+.composer:focus-within{border-color:var(--composer-focus) !important;box-shadow:0 18px 50px -20px rgba(0,0,0,.8) !important}
 .composer textarea{transition:height .12s ease;line-height:1.6}
 .attachbtn{border:1px solid var(--line) !important;background:var(--surface) !important}
 .attachbtn:hover{border-color:var(--accent-line) !important}
@@ -187,8 +185,69 @@ input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea{tr
 
 /* Refined focus ring everywhere */
 :focus-visible{outline:2px solid var(--accent-line) !important;outline-offset:2px;border-radius:var(--r-sm)}
+/* …but never an inner highlight box around the chat text field itself */
+.composer textarea:focus-visible{outline:none !important}
 
 /* Touch targets */
 @media (hover:none){.iconbtn,.send,.model-btn{min-width:42px;min-height:42px}.iconbtn:hover,.side .new:hover,.token-card:hover,.support-card:hover{transform:none}}
 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+/* ---------- Global scale: everything slightly smaller ---------- */
+/* Uniform ~6% shrink of the whole UI (text, spacing, controls) without
+   touching any layout logic. zoom is used so px-based sizing scales too. */
+html{zoom:.94}
+@media (max-width:750px){html{zoom:.96}}
+
+/* ---------- Chat extras: avatar, thinking, code cards, image mode ---------- */
+/* Larger user avatar in conversation */
+:root.has-avatar .msg.user .avatar{width:38px;height:38px;min-width:38px}
+
+/* "Thinking" state: shimmering label + pulsing brand avatar */
+.typing-bubble{display:flex;align-items:center;gap:9px}
+.tk-label{font-style:normal;font-size:13px;line-height:1;
+  background:linear-gradient(90deg,var(--muted) 25%,var(--text) 50%,var(--muted) 75%);
+  background-size:200% 100%;-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;animation:tkShimmer 1.6s linear infinite}
+@keyframes tkShimmer{to{background-position:-200% 0}}
+#typing .avatar{animation:tkPulse 1.5s ease-in-out infinite}
+@keyframes tkPulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 45%,transparent)}50%{box-shadow:0 0 0 9px transparent}}
+
+/* Image generation placeholder (ChatGPT-style shimmering canvas) */
+.msg.img-gen .typing-bubble{display:block;width:min(340px,72vw);height:220px;padding:0;position:relative;overflow:hidden}
+.msg.img-gen .typing-bubble>span{display:none}
+.msg.img-gen .typing-bubble::before{content:"";position:absolute;inset:0;
+  background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.09) 50%,transparent 70%);
+  background-size:200% 100%;animation:tkShimmer 1.4s linear infinite}
+.msg.img-gen .typing-bubble::after{content:"";position:absolute;inset:0;margin:auto;width:44px;height:44px;border-radius:50%;
+  background:var(--grad);filter:blur(2px);opacity:.85;animation:tkOrb 1.6s ease-in-out infinite}
+@keyframes tkOrb{0%,100%{transform:scale(.85);opacity:.6}50%{transform:scale(1.05);opacity:1}}
+.msg.img-gen .tk-label{position:absolute;inset:auto 0 14px;text-align:center}
+
+/* VS Code-style code cards with copy button */
+.ua-codecard{border:1px solid var(--line-2);border-radius:12px;overflow:hidden;margin:8px 0;background:#0d1117}
+.ua-codecard-head{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:5px 8px 5px 12px;background:rgba(255,255,255,.045);border-bottom:1px solid var(--line)}
+.ua-codecard-head .ua-lang{font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--muted);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;text-transform:lowercase}
+.ua-copybtn{display:inline-flex;align-items:center;gap:5px;min-height:28px;padding:0 10px;border:0;border-radius:8px;
+  background:transparent;color:var(--muted);font:inherit;font-size:11.5px;cursor:pointer;transition:background .15s,color .15s}
+.ua-copybtn:hover{background:rgba(255,255,255,.08);color:var(--text)}
+.ua-copybtn.ok{color:var(--ok)}
+.ua-copybtn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ua-codecard>pre.ua-code{margin:0;border:0;border-radius:0;background:transparent}
+
+/* Edit-last-message affordance while the reply is being prepared */
+.ua-editbtn{position:absolute;top:-9px;inset-inline-start:-9px;z-index:3;width:26px;height:26px;display:grid;place-items:center;
+  border:1px solid var(--line-2);border-radius:50%;background:var(--surface);color:var(--muted);cursor:pointer;
+  box-shadow:var(--shadow-sm);opacity:0;transform:scale(.8);transition:opacity .18s,transform .18s,color .15s}
+.msg.user .bubble{position:relative}
+.msg.user.ua-editable .ua-editbtn{opacity:1;transform:none}
+.ua-editbtn:hover{color:var(--text)}
+.ua-editbtn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* Image-mode toggle inside the composer */
+.ua-imgmode{width:38px;height:38px;flex:none;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;
+  background:var(--surface);color:var(--muted);cursor:pointer;transition:border-color .2s,color .2s,box-shadow .2s}
+.ua-imgmode svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.ua-imgmode:hover{border-color:var(--accent-line);color:var(--text)}
+.ua-imgmode.on{border-color:var(--accent-line);color:var(--accent);box-shadow:0 0 0 3px var(--ring)}

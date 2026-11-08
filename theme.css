@@ -90,8 +90,25 @@ body::after{
 .main{background:transparent}
 
 /* ---------- The orb ---------- */
-@keyframes orbFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-7px) scale(1.035)}}
-@keyframes orbSpin{to{transform:rotate(360deg)}}
+/* Neon-sign flicker: the orb glows steadily, then dips and buzzes like an
+   old lamp / neon tube warming up. Slow cycle, mostly calm. */
+@keyframes neonGlow{
+  0%,100%{opacity:1;filter:saturate(1.1) brightness(1);
+    box-shadow:0 0 38px 6px rgba(190,70,255,.32),0 0 90px 26px rgba(255,90,70,.14)}
+  7%{opacity:1;filter:saturate(1.1) brightness(1)}
+  8%{opacity:.62;filter:saturate(.9) brightness(.72);
+    box-shadow:0 0 18px 3px rgba(190,70,255,.18),0 0 44px 12px rgba(255,90,70,.07)}
+  9.5%{opacity:.95;filter:saturate(1.05) brightness(.96)}
+  11%{opacity:.7;filter:saturate(.95) brightness(.78);
+    box-shadow:0 0 22px 4px rgba(190,70,255,.2),0 0 50px 14px rgba(255,90,70,.08)}
+  12.5%,44%{opacity:1;filter:saturate(1.1) brightness(1);
+    box-shadow:0 0 38px 6px rgba(190,70,255,.32),0 0 90px 26px rgba(255,90,70,.14)}
+  45%{opacity:.78;filter:saturate(1) brightness(.82);
+    box-shadow:0 0 26px 4px rgba(190,70,255,.22),0 0 58px 16px rgba(255,90,70,.09)}
+  46.5%,78%{opacity:1;filter:saturate(1.1) brightness(1.02);
+    box-shadow:0 0 42px 7px rgba(190,70,255,.36),0 0 100px 28px rgba(255,90,70,.16)}
+  86%{opacity:.92;filter:saturate(1.05) brightness(.94)}
+}
 .auth-mark,
 .welcomein::before{
   content:"";display:block;position:relative;border-radius:50%;
@@ -103,7 +120,7 @@ body::after{
     #6d2bd1;
   box-shadow:0 0 38px 6px rgba(190,70,255,.32),0 0 90px 26px rgba(255,90,70,.14);
   filter:saturate(1.1);
-  animation:orbFloat 6s ease-in-out infinite;
+  animation:neonGlow 7.5s linear infinite;
 }
 .auth-mark::after{display:none}
 .welcomein::before{width:110px;height:110px;margin-bottom:30px}

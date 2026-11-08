@@ -601,3 +601,16 @@ button.li:hover{transform:translateY(-1px)}
   .toolbar,.detail-head,.results{max-width:100%;min-width:0}
 }
 .toolbar .field-search input[type=search]{min-width:0!important;height:100%;padding:0;background:transparent;box-shadow:none;border-radius:0}
+
+/* Maintenance control (admin-maintenance.js) */
+.mt-card{margin-bottom:16px;display:grid;gap:12px}
+.mt-card.is-on{border-color:color-mix(in srgb,#f59e0b 55%,transparent)}
+.mt-title{margin:0;font-size:16px}
+.mt-state{margin:4px 0 0;font-size:13px;opacity:.8}
+.mt-card.is-on .mt-state{color:#f59e0b;opacity:1}
+.mt-actions{display:flex;flex-wrap:wrap;gap:8px}
+.mt-actions .btn{min-height:44px}
+.mt-msg{margin:0;font-size:13px;min-height:1em}
+.mt-msg.err{color:#ef4444}
+@media(max-width:600px){.mt-actions .btn{flex:1 1 100%}}
+body:not([data-view="dash"]) .mt-card{display:none}
