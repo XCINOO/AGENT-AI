@@ -11,9 +11,10 @@
 <title>پنل مدیریت Unknown AI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="./theme-init.js"></script>
 <link rel="stylesheet" href="./admin.css">
+<link rel="stylesheet" href="./admin-redesign.css">
 </head>
 <body>
 
@@ -85,16 +86,18 @@
 <main id="app" class="hidden">
   <aside id="side" aria-label="منوی اصلی">
     <div class="brand">
-      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><defs><linearGradient id="bm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6a5f"/><stop offset="1" stop-color="#d9201a"/></linearGradient></defs><rect width="40" height="40" rx="13" fill="url(#bm)"/><path d="M23.5 11 14 20l9.5 9" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="27.5" cy="20" r="2.4" fill="#fff"/></svg></span>
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><defs><linearGradient id="bm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a3a40"/><stop offset="1" stop-color="#0e0e10"/></linearGradient></defs><rect width="40" height="40" rx="13" fill="url(#bm)"/><path d="M23.5 11 14 20l9.5 9" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="27.5" cy="20" r="2.4" fill="#fff"/></svg></span>
       <div class="brand-text"><img class="logo-img brand-logo" src="./assets/logo-mark.png" alt="Unknown AI" width="356" height="36"><small>پنل مدیریت</small></div>
       <button id="sideCollapse" class="icon-btn icon-btn-sm only-desktop" type="button" aria-label="جمع‌کردن منو" aria-expanded="true" title="جمع‌کردن / باز‌کردن منو">
         <svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M9 5v14"/></svg>
       </button>
     </div>
     <nav id="nav" aria-label="بخش‌ها">
+      <div class="nav-group" aria-hidden="true">منوی اصلی</div>
       <button class="navbtn active" data-view="dash" data-tip="داشبورد" title="داشبورد"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.8 12 3l9 7.8"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span class="nl">داشبورد</span></button>
       <button class="navbtn" data-view="users" data-tip="کاربران" title="کاربران"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.7a3.5 3.5 0 0 1 0 6.6M18 14.8c1.9.7 3.2 2.4 3.5 5.2"/></svg><span class="nl">کاربران</span></button>
       <button class="navbtn" data-view="support" data-tip="پشتیبانی" title="پشتیبانی"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-8l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg><span class="nl">پشتیبانی</span><i id="supportDot" class="nav-count hidden"></i></button>
+      <div class="nav-group" aria-hidden="true">تحلیل و مدیریت</div>
       <button class="navbtn" data-view="reports" data-tip="گزارش‌ها" title="گزارش‌ها"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="nl">گزارش‌ها</span></button>
       <button class="navbtn" data-view="audit" data-tip="رویدادهای مدیریتی" title="رویدادهای مدیریتی"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="nl">رویدادهای مدیریتی</span></button>
       <button class="navbtn" data-view="admins" id="navAdmins" data-tip="مدیران" title="مدیران"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg><span class="nl">مدیران</span></button>
@@ -113,6 +116,7 @@
 
   <div id="main">
     <header id="top">
+      <span class="crumb" aria-hidden="true">Unknown AI<i>›</i></span>
       <h1 id="pageTitle">داشبورد</h1>
       <label class="search" for="globalSearch">
         <svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
